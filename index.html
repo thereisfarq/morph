@@ -336,7 +336,7 @@
 <div class="app">
 
   <div class="topbar">
-    <div class="topbar-left">
+    <div class="topbar-left" id="topbarLeft">
       <button id="logoHomeBtn" class="logo" aria-label="Morph home">
         <svg viewBox="0 0 577 128" xmlns="http://www.w3.org/2000/svg">
           <path d="M133.352 0.667219C159.011 5.48911 159.7 36.6591 143.685 81.4337C134.041 108.643 120.781 126.725 103.56 126.725C92.7105 126.725 87.1998 116.22 87.1998 101.755C87.1998 101.066 87.1998 100.205 87.1998 99.3436C87.7164 86.7722 92.1938 71.9622 100.632 58.5298H98.7378C89.7829 72.8232 85.3055 88.8387 85.3055 101.755C77.2116 118.459 65.8457 126.725 53.2744 126.725C43.2862 126.725 39.3254 117.942 38.8087 106.232C38.8087 105.715 38.8087 105.199 38.8087 104.682C38.6365 88.1499 45.0083 66.9681 51.2079 57.4965H49.3136C42.9418 67.3125 36.3978 89.5276 37.0866 106.232C29.165 119.664 19.349 126.725 11.2551 126.725C-9.06564 126.725 2.47243 85.3946 12.1162 61.974C21.9322 38.3812 36.57 10.8276 58.6129 10.8276C71.012 10.8276 78.417 20.988 78.7615 36.8313C74.1118 46.9917 70.8398 58.3576 69.4621 69.7234H71.3564C72.7341 58.3576 76.0061 46.9917 80.6558 36.8313C91.3328 13.4108 110.104 -3.63803 133.352 0.667219Z" fill="#c41e24"/>
@@ -347,7 +347,7 @@
         </svg>
       </button>
     </div>
-    <div class="topbar-right">
+    <div class="topbar-right" id="topbarRight">
       <div class="topbar-actions" id="topbarActions" hidden>
         <button id="downloadBtn" class="topbar-icon-btn" aria-label="Export">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>
@@ -695,7 +695,7 @@
   /* ============================= dom refs ============================= */
   var els = {};
   ["landingView","editorView","fileInputLanding","logoHomeBtn","infoBtn","infoOverlay","infoCloseBtn",
-   "topbarActions","downloadBtn","pageOutline","contentArea","previewImg","pageCaption","mismatchBanner",
+   "topbarLeft","topbarRight","topbarActions","downloadBtn","pageOutline","contentArea","previewImg","pageCaption","mismatchBanner",
    "landingActions","landingShareBtn","shareStoryOverlay","shareStoryCloseBtn","shareStoryBtn",
    "pagesStripItems","addMoreBtn","fileInputMore","pageNav","prevPageBtn","nextPageBtn","pageNavLabel",
    "infoFileName","infoPixels","infoDetectedDpi","sourceDpiInput",
@@ -751,6 +751,9 @@
     els.editorView.hidden = view !== "editor";
     els.topbarActions.hidden = view !== "editor";
     els.landingActions.hidden = view !== "landing";
+    els.logoHomeBtn.hidden = view === "landing";
+    if(view === "landing"){ els.topbarLeft.appendChild(els.infoBtn); }
+    else { els.topbarRight.appendChild(els.infoBtn); }
   }
 
   /* ============================= DPI detection ============================= */
