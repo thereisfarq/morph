@@ -1099,6 +1099,37 @@
   function round2(v){ return Math.round(v*100)/100; }
 
   /* ============================= rendering (live preview) ============================= */
+  // .page-outline has no in-flow content (its image sits in an absolutely-positioned
+  // .content-area), so CSS aspect-ratio alone collapses it to ~0 inside a centered flex
+  // parent. Size it explicitly in pixels instead, matching the page's aspect ratio while
+  // fitting inside its pane.
+  function sizeOutlineBox(outlineEl, maxW, maxH, w, h){
+    if(maxW <= 0 || maxH <= 0 || !w || !h) return;
+    var ratio = w / h;
+    var outW = maxW, outH = outW / ratio;
+    if(outH > maxH){ outH = maxH; outW = outH * ratio; }
+    outlineEl.style.width = Math.max(1, Math.round(outW)) + "px";
+    outlineEl.style.height = Math.max(1, Math.round(outH)) + "px";
+  }
+  function layoutPreviewBoxes(w, h){
+    var pane = els.pageOutline.closest(".preview-pane");
+    if(pane){
+      var ps = getComputedStyle(pane);
+      var padX = parseFloat(ps.paddingLeft) + parseFloat(ps.paddingRight);
+      var availW = Math.min(pane.clientWidth - padX, 416);
+      var availH = window.innerWidth <= 860 ? window.innerHeight*0.40 : window.innerHeight*0.55;
+      sizeOutlineBox(els.pageOutline, availW, availH, w, h);
+    }
+    var body = els.exportPageOutline.closest(".export-body");
+    if(body){
+      var bs = getComputedStyle(body);
+      var padX2 = parseFloat(bs.paddingLeft) + parseFloat(bs.paddingRight);
+      var padY2 = parseFloat(bs.paddingTop) + parseFloat(bs.paddingBottom);
+      var availW2 = Math.min(body.clientWidth - padX2, 416);
+      var availH2 = Math.min(body.clientHeight - padY2, window.innerHeight*0.70);
+      sizeOutlineBox(els.exportPageOutline, availW2, availH2, w, h);
+    }
+  }
   function render(){
     var it = activeItem();
     if(!it){ return; }
@@ -1106,8 +1137,7 @@
     els.exportPreviewImg.src = it.previewUrl;
 
     var w = state.pageWidth, h = state.pageHeight;
-    els.pageOutline.style.aspectRatio = w + " / " + h;
-    els.exportPageOutline.style.aspectRatio = w + " / " + h;
+    layoutPreviewBoxes(w, h);
     var pt = state.padTop, pr = state.padRight, pb = state.padBottom, pl = state.padLeft;
     var topPct = clampPct(pt / h * 100), rightPct = clampPct(pr / w * 100), botPct = clampPct(pb / h * 100), leftPct = clampPct(pl / w * 100);
     [els.contentArea, els.exportContentArea].forEach(function(el){
@@ -1997,6 +2027,13 @@
     e.preventDefault();
     var files = e.dataTransfer && e.dataTransfer.files;
     if(files && files.length) handleFiles(files);
+  });
+
+  /* ============================= resize ============================= */
+  var resizeTimer = null;
+  window.addEventListener("resize", function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){ if(activeItem()) render(); }, 120);
   });
 
   /* ============================= init ============================= */
