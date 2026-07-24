@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="Convert images or PDFs into a print-ready, press-safe file. Nothing you upload ever leaves your browser.">
+<title>MORPH — print-ready export</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='4' fill='%23000'/%3E%3Cpath d='M6 18 L9 6 L12 14 L15 6 L18 18' stroke='%23c41e24' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --bg: #ffffff;
+    --fg: #000000;
+    --border: #cccccc;
+    --border-subtle: #e5e5e5;
+    --accent: #c41e24;
+    --muted: #888888;
+    --ui-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --mono-font: "SF Mono", "Menlo", "Consolas", monospace;
+    --transition-fast: 180ms ease-out;
+    --radius: 8px;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--ui-font);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+  }
+
+  a { color: inherit; }
+
+  button, input, select {
+    font-family: inherit;
+    color: inherit;
+  }
+  button { background: none; border: none; cursor: pointer; }
+
+  input[type="number"], input[type="text"], select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.82rem;
+    color: var(--fg);
+  }
+  input[type="number"]:focus, input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--fg);
+  }
+
+  .eyebrow {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ---------- layout shell ---------- */
+  .app { min-height: 100vh; display: flex; flex-direction: column; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .logo { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0; }
+  .logo svg { height: 26px; width: auto; display: block; }
+
+  .topbar-left { display: flex; align-items: center; gap: 0.6rem; }
+  .topbar-right { display: flex; align-items: center; gap: 1rem; }
+  .topbar-actions { display: flex; align-items: center; gap: 1.25rem; }
+
+  .topbar-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: var(--muted);
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
+  .topbar-icon-btn:hover { background: #f2f2f2; color: var(--fg); }
+  .topbar-icon-btn svg { width: 18px; height: 18px; }
+  .topbar-icon-btn:disabled { opacity: 0.35; cursor: default; }
+  .topbar-icon-btn:disabled:hover { background: none; color: var(--muted); }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: background var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .btn:hover { background: #f2f2f2; }
+  .btn:disabled { opacity: 0.35; cursor: default; }
+  .btn:disabled:hover { background: none; }
+  .btn-primary { background: var(--fg); color: var(--bg); }
+  .btn-primary:hover { background: #222; }
+  .btn-accent { color: var(--accent); }
+  .btn-accent:hover { background: #c41e2412; }
+  .btn-ghost { color: var(--muted); }
+  .btn-outline { border-color: var(--border); }
+  .btn-lg { padding: 0.85rem 2rem; font-size: 0.9rem; border-radius: 8px; cursor: pointer; }
+
+  /* ---------- info modal ---------- */
+  .info-overlay {
+    position: fixed; inset: 0; background: #00000055; z-index: 200;
+    display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  .info-card {
+    position: relative; background: var(--bg); border-radius: 14px;
+    box-shadow: 0 24px 60px #00000030; max-width: 28rem; width: 100%;
+    padding: 2rem 1.75rem 1.75rem; max-height: 85vh; overflow-y: auto;
+  }
+  .info-close {
+    position: absolute; top: 0.9rem; right: 0.9rem; width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%; color: var(--muted);
+  }
+  .info-close:hover { background: #f2f2f2; color: var(--fg); }
+  .info-close svg { width: 14px; height: 14px; }
+  .info-card h2 { font-size: 1.1rem; font-weight: 700; margin: 0.35rem 0 0.9rem; }
+  .info-card h3 { font-size: 0.85rem; font-weight: 700; margin: 1.1rem 0 0.4rem; }
+  .info-card p { font-size: 0.85rem; line-height: 1.6; color: #333; margin-bottom: 0.9rem; }
+  .info-card p:last-child { margin-bottom: 0; }
+  .info-card strong { color: var(--fg); }
+
+  /* ---------- landing ---------- */
+  .landing { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; text-align: center; }
+  .landing-inner { max-width: 27rem; width: 100%; }
+  .landing-mark svg { height: 3.6rem; width: auto; margin: 0 auto 1.8rem; display: block; }
+  .landing-tagline { font-size: 0.92rem; color: var(--muted); line-height: 1.55; margin-bottom: 1.85rem; }
+  .landing-note { margin-top: 1.3rem; font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+
+  .dropzone {
+    border: 1.5px dashed var(--border); border-radius: 14px; padding: 2.75rem 1.5rem;
+    cursor: pointer; transition: border-color var(--transition-fast), background var(--transition-fast);
+  }
+  .dropzone:hover, .dropzone.drag-over { border-color: var(--accent); background: #c41e2408; }
+  .dropzone h1 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; }
+  .dropzone p { font-size: 0.85rem; color: var(--muted); }
+
+  /* ---------- editor ---------- */
+  .editor { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  /* ---------- pages strip ---------- */
+  .pages-strip { display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border-subtle); }
+  .pages-strip-items { display: flex; align-items: center; gap: 0.6rem; overflow-x: auto; flex: 1; min-width: 0; padding: 2px; }
+  .page-thumb {
+    position: relative; flex-shrink: 0; width: 50px; height: 66px; border: 2px solid transparent;
+    border-radius: 4px; overflow: hidden; cursor: pointer; background: #f2f2f2;
+  }
+  .page-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .page-thumb.active { border-color: var(--accent); }
+  .page-thumb-label {
+    position: absolute; bottom: 0; left: 0; right: 0; font-size: 0.55rem; text-align: center;
+    background: #0009; color: #fff; padding: 1px 0; font-weight: 600;
+  }
+  .page-thumb-actions { position: absolute; top: 2px; right: 2px; display: flex; flex-direction: column; gap: 2px; opacity: 0; transition: opacity 120ms; }
+  .page-thumb:hover .page-thumb-actions, .page-thumb:focus-within .page-thumb-actions { opacity: 1; }
+  .page-thumb-actions button { width: 16px; height: 16px; background: #000c; color: #fff; border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+  .page-thumb-actions button:hover { background: var(--accent); }
+  .page-thumb-actions button svg { width: 9px; height: 9px; }
+  .page-add-btn {
+    flex-shrink: 0; width: 50px; height: 66px; border: 1.5px dashed var(--border); border-radius: 4px;
+    display: flex; align-items: center; justify-content: center; color: var(--muted);
+  }
+  .page-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .page-add-btn svg { width: 16px; height: 16px; }
+
+  .page-nav { display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+  .page-nav button { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .page-nav button:hover { background: #f2f2f2; color: var(--fg); }
+  .page-nav button:disabled { opacity: 0.3; }
+  .page-nav button svg { width: 13px; height: 13px; }
+
+  .editor-layout { flex: 1; display: flex; min-height: 0; }
+  @media (max-width: 860px) { .editor-layout { flex-direction: column; } }
+
+  .preview-pane {
+    flex: 1.35; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem; gap: 1rem; min-width: 0; background: #fafafa; border-right: 1px solid var(--border-subtle);
+  }
+  @media (max-width: 860px) { .preview-pane { border-right: none; border-bottom: 1px solid var(--border-subtle); padding: 1.5rem 1rem; } }
+
+  .page-stage {
+    display: flex; align-items: center; justify-content: center; width: 100%;
+    max-width: 26rem; max-height: 55vh;
+  }
+  @media (max-width: 860px) { .page-stage { max-height: 40vh; } }
+
+  .page-outline {
+    position: relative; background: #ffffff; border: 1px solid var(--border);
+    box-shadow: 0 2px 18px #0000001a; max-width: 100%; max-height: 100%;
+  }
+
+  .content-area { position: absolute; overflow: hidden; background: repeating-conic-gradient(#f3f3f3 0% 25%, #ffffff 0% 50%) 50% / 14px 14px; }
+  .content-area img { width: 100%; height: 100%; display: block; }
+  .content-area.fit-contain img { object-fit: contain; }
+  .content-area.fit-cover img { object-fit: cover; }
+
+  .page-caption { font-size: 0.72rem; color: var(--muted); text-align: center; line-height: 1.5; }
+  .page-caption strong { color: var(--fg); }
+
+  .mismatch-banner {
+    max-width: 26rem; width: 100%; font-size: 0.76rem; line-height: 1.55;
+    border: 1px solid #c41e2440; background: #c41e2408; color: #7a1216;
+    border-radius: 8px; padding: 0.7rem 0.9rem;
+  }
+  .mismatch-banner strong { color: var(--accent); }
+
+  .controls-pane { flex: 1; min-width: 0; overflow-y: auto; padding: 1.5rem 1.75rem 6rem; max-width: 26rem; }
+  @media (max-width: 860px) { .controls-pane { max-width: none; padding: 1.25rem 1.25rem 6rem; } }
+
+  .ctrl-section { padding: 1.25rem 0; border-bottom: 1px solid var(--border-subtle); }
+  .ctrl-section:first-child { padding-top: 0; }
+  .ctrl-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; }
+
+  .field-row { display: flex; gap: 0.6rem; margin-bottom: 0.6rem; }
+  .field-row:last-child { margin-bottom: 0; }
+  .field { flex: 1; min-width: 0; }
+  .field label { display: block; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+  .field input, .field select { width: 100%; }
+
+  .segmented { display: flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+  .segmented button {
+    flex: 1; padding: 0.5rem 0.5rem; font-size: 0.76rem; font-weight: 600; text-align: center;
+    color: var(--muted); transition: background var(--transition-fast), color var(--transition-fast);
+    border-right: 1px solid var(--border);
+  }
+  .segmented button:last-child { border-right: none; }
+  .segmented button.active { background: var(--fg); color: var(--bg); }
+  .segmented button:not(.active):hover { background: #f2f2f2; }
+
+  .pad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .chip-toggle {
+    display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.7rem; font-weight: 600;
+    color: var(--muted); padding: 0.3rem 0.55rem; border: 1px solid var(--border); border-radius: 20px;
+  }
+  .chip-toggle.active { color: var(--fg); border-color: var(--fg); }
+  .chip-toggle svg { width: 12px; height: 12px; }
+
+  .slider-row { display: flex; align-items: center; gap: 0.75rem; }
+  .slider-row input[type="range"] { flex: 1; accent-color: var(--fg); }
+  .slider-value { font-size: 0.8rem; font-weight: 700; font-family: var(--mono-font); min-width: 3.4rem; text-align: right; }
+
+  .hint { font-size: 0.72rem; color: var(--muted); line-height: 1.5; margin-top: 0.55rem; }
+  .hint.warn { color: #a3670a; }
+  .hint strong { color: var(--fg); }
+
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .switch { position: relative; width: 38px; height: 22px; border-radius: 999px; background: var(--border); transition: background var(--transition-fast); flex-shrink: 0; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform var(--transition-fast); box-shadow: 0 1px 2px #0003; }
+  .switch.on { background: var(--fg); }
+  .switch.on::after { transform: translateX(16px); }
+
+  .source-info { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; font-size: 0.78rem; }
+  .source-info dt { color: var(--muted); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .source-info dd { font-weight: 600; font-family: var(--mono-font); font-size: 0.78rem; overflow-wrap: anywhere; }
+
+  /* ---------- export overlay ---------- */
+  .export-overlay {
+    position: fixed; inset: 0; background: var(--bg); z-index: 120;
+    display: flex; flex-direction: column;
+  }
+  .export-topbar {
+    display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .export-topbar h2 { font-size: 0.85rem; font-weight: 700; }
+  .export-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; overflow: auto; }
+  .export-bar {
+    display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap;
+    padding: 1.25rem 1.5rem; border-top: 1px solid var(--border-subtle);
+  }
+  .export-note { font-size: 0.72rem; color: var(--muted); text-align: center; padding: 0 1.5rem 1rem; }
+
+  /* ---------- progress bar ---------- */
+  .export-progress { position: fixed; left: 0; right: 0; bottom: 0; z-index: 300; background: var(--bg); border-top: 1px solid var(--border-subtle); padding: 0.6rem 1rem 0.8rem; }
+  .export-progress-track { height: 4px; background: var(--border-subtle); border-radius: 4px; overflow: hidden; margin-bottom: 0.4rem; }
+  .export-progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 120ms linear; }
+  .export-progress-label { font-size: 0.7rem; color: var(--muted); text-align: center; }
+
+  /* ---------- toast ---------- */
+  .toast {
+    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+    background: #111; color: #fff; font-size: 0.8rem; font-weight: 600;
+    padding: 0.65rem 1.1rem; border-radius: 8px; z-index: 400; box-shadow: 0 8px 24px #0004;
+    max-width: 22rem; text-align: center; line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <button id="logoHomeBtn" class="logo" aria-label="Morph home">
+        <svg viewBox="0 0 577 128" xmlns="http://www.w3.org/2000/svg">
+          <path d="M133.352 0.667219C159.011 5.48911 159.7 36.6591 143.685 81.4337C134.041 108.643 120.781 126.725 103.56 126.725C92.7105 126.725 87.1998 116.22 87.1998 101.755C87.1998 101.066 87.1998 100.205 87.1998 99.3436C87.7164 86.7722 92.1938 71.9622 100.632 58.5298H98.7378C89.7829 72.8232 85.3055 88.8387 85.3055 101.755C77.2116 118.459 65.8457 126.725 53.2744 126.725C43.2862 126.725 39.3254 117.942 38.8087 106.232C38.8087 105.715 38.8087 105.199 38.8087 104.682C38.6365 88.1499 45.0083 66.9681 51.2079 57.4965H49.3136C42.9418 67.3125 36.3978 89.5276 37.0866 106.232C29.165 119.664 19.349 126.725 11.2551 126.725C-9.06564 126.725 2.47243 85.3946 12.1162 61.974C21.9322 38.3812 36.57 10.8276 58.6129 10.8276C71.012 10.8276 78.417 20.988 78.7615 36.8313C74.1118 46.9917 70.8398 58.3576 69.4621 69.7234H71.3564C72.7341 58.3576 76.0061 46.9917 80.6558 36.8313C91.3328 13.4108 110.104 -3.63803 133.352 0.667219Z" fill="#c41e24"/>
+          <path d="M179.683 65.8098C179.683 70.8261 180.24 75.731 181.355 80.5244C182.581 85.2064 184.476 89.4424 187.04 93.2325C189.604 97.0227 192.948 100.088 197.073 102.429C201.197 104.659 206.214 105.773 212.122 105.773C218.03 105.773 223.046 104.659 227.171 102.429C231.296 100.088 234.64 97.0227 237.204 93.2325C239.768 89.4424 241.607 85.2064 242.722 80.5244C243.948 75.731 244.561 70.8261 244.561 65.8098C244.561 60.5704 243.948 55.4983 242.722 50.5934C241.607 45.6886 239.768 41.341 237.204 37.5509C234.64 33.6493 231.296 30.5837 227.171 28.3542C223.046 26.0133 218.03 24.8428 212.122 24.8428C206.214 24.8428 201.197 26.0133 197.073 28.3542C192.948 30.5837 189.604 33.6493 187.04 37.5509C184.476 41.341 182.581 45.6886 181.355 50.5934C180.24 55.4983 179.683 60.5704 179.683 65.8098ZM153.43 65.8098C153.43 56.8918 154.768 48.6426 157.444 41.0623C160.119 33.3706 163.965 26.6821 168.981 20.9969C173.998 15.3117 180.129 10.8527 187.374 7.61992C194.732 4.38715 202.981 2.77077 212.122 2.77077C221.374 2.77077 229.623 4.38715 236.869 7.61992C244.115 10.8527 250.246 15.3117 255.263 20.9969C260.279 26.6821 264.125 33.3706 266.8 41.0623C269.476 48.6426 270.813 56.8918 270.813 65.8098C270.813 74.5048 269.476 82.6424 266.8 90.2227C264.125 97.6915 260.279 104.213 255.263 109.787C250.246 115.36 244.115 119.764 236.869 122.996C229.623 126.118 221.374 127.678 212.122 127.678C202.981 127.678 194.732 126.118 187.374 122.996C180.129 119.764 173.998 115.36 168.981 109.787C163.965 104.213 160.119 97.6915 157.444 90.2227C154.768 82.6424 153.43 74.5048 153.43 65.8098Z" fill="black"/>
+          <path d="M299.962 59.6229H328.722C334.742 59.6229 339.257 58.2852 342.267 55.6098C345.276 52.9344 346.781 48.5869 346.781 42.5673C346.781 36.7706 345.276 32.5903 342.267 30.0263C339.257 27.351 334.742 26.0133 328.722 26.0133H299.962V59.6229ZM273.71 5.61337H338.086C343.437 5.61337 348.23 6.50517 352.466 8.28877C356.814 9.96089 360.493 12.3019 363.502 15.3117C366.624 18.3215 368.965 21.8329 370.525 25.846C372.198 29.7477 373.034 33.9837 373.034 38.5542C373.034 45.5771 371.529 51.6524 368.519 56.7803C365.62 61.9081 360.827 65.8097 354.139 68.4851V68.8196C357.371 69.7114 360.047 71.1048 362.165 72.9999C364.283 74.7835 366.011 76.9572 367.348 79.5211C368.686 81.9736 369.634 84.7047 370.191 87.7145C370.86 90.7244 371.306 93.7342 371.529 96.744C371.64 98.6391 371.752 100.869 371.863 103.432C371.975 105.996 372.142 108.616 372.365 111.291C372.699 113.967 373.145 116.531 373.702 118.983C374.371 121.324 375.319 123.331 376.545 125.003H350.293C348.844 121.213 347.952 116.698 347.617 111.459C347.283 106.219 346.781 101.203 346.112 96.4096C345.221 90.167 343.326 85.5965 340.427 82.6982C337.529 79.7998 332.791 78.3507 326.214 78.3507H299.962V125.003H273.71V5.61337Z" fill="black"/>
+          <path d="M405.586 61.7967H425.986C428.996 61.7967 431.894 61.5737 434.681 61.1278C437.468 60.6819 439.921 59.8458 442.039 58.6196C444.157 57.2819 445.829 55.4426 447.055 53.1016C448.393 50.7607 449.062 47.6951 449.062 43.905C449.062 40.1148 448.393 37.0493 447.055 34.7083C445.829 32.3673 444.157 30.5837 442.039 29.3575C439.921 28.0198 437.468 27.128 434.681 26.6821C431.894 26.2362 428.996 26.0133 425.986 26.0133H405.586V61.7967ZM379.334 5.61337H433.176C440.645 5.61337 446.999 6.72812 452.239 8.95762C457.478 11.0756 461.714 13.9182 464.947 17.4854C468.291 21.0526 470.688 25.1215 472.137 29.6919C473.697 34.2624 474.478 39.0001 474.478 43.905C474.478 48.6984 473.697 53.436 472.137 58.118C470.688 62.6885 468.291 66.7573 464.947 70.3245C461.714 73.8917 457.478 76.79 452.239 79.0195C446.999 81.1375 440.645 82.1965 433.176 82.1965H405.586V125.003H379.334V5.61337Z" fill="black"/>
+          <path d="M475.814 5.61337H502.066V51.4295H550.391V5.61337H576.643V125.003H550.391V73.5015H502.066V125.003H475.814V5.61337Z" fill="black"/>
+        </svg>
+      </button>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-actions" id="topbarActions" hidden>
+        <button id="downloadBtn" class="topbar-icon-btn" aria-label="Export">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>
+        </button>
+      </div>
+      <button id="infoBtn" class="topbar-icon-btn" aria-label="About Morph">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v6" stroke-linecap="round"/><circle cx="12" cy="7.5" r="0.9" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Landing / upload -->
+  <div class="landing" id="landingView">
+    <div class="landing-inner">
+      <div class="landing-mark">
+        <svg viewBox="0 0 577 128" xmlns="http://www.w3.org/2000/svg">
+          <path d="M133.352 0.667219C159.011 5.48911 159.7 36.6591 143.685 81.4337C134.041 108.643 120.781 126.725 103.56 126.725C92.7105 126.725 87.1998 116.22 87.1998 101.755C87.1998 101.066 87.1998 100.205 87.1998 99.3436C87.7164 86.7722 92.1938 71.9622 100.632 58.5298H98.7378C89.7829 72.8232 85.3055 88.8387 85.3055 101.755C77.2116 118.459 65.8457 126.725 53.2744 126.725C43.2862 126.725 39.3254 117.942 38.8087 106.232C38.8087 105.715 38.8087 105.199 38.8087 104.682C38.6365 88.1499 45.0083 66.9681 51.2079 57.4965H49.3136C42.9418 67.3125 36.3978 89.5276 37.0866 106.232C29.165 119.664 19.349 126.725 11.2551 126.725C-9.06564 126.725 2.47243 85.3946 12.1162 61.974C21.9322 38.3812 36.57 10.8276 58.6129 10.8276C71.012 10.8276 78.417 20.988 78.7615 36.8313C74.1118 46.9917 70.8398 58.3576 69.4621 69.7234H71.3564C72.7341 58.3576 76.0061 46.9917 80.6558 36.8313C91.3328 13.4108 110.104 -3.63803 133.352 0.667219Z" fill="#c41e24"/>
+          <path d="M179.683 65.8098C179.683 70.8261 180.24 75.731 181.355 80.5244C182.581 85.2064 184.476 89.4424 187.04 93.2325C189.604 97.0227 192.948 100.088 197.073 102.429C201.197 104.659 206.214 105.773 212.122 105.773C218.03 105.773 223.046 104.659 227.171 102.429C231.296 100.088 234.64 97.0227 237.204 93.2325C239.768 89.4424 241.607 85.2064 242.722 80.5244C243.948 75.731 244.561 70.8261 244.561 65.8098C244.561 60.5704 243.948 55.4983 242.722 50.5934C241.607 45.6886 239.768 41.341 237.204 37.5509C234.64 33.6493 231.296 30.5837 227.171 28.3542C223.046 26.0133 218.03 24.8428 212.122 24.8428C206.214 24.8428 201.197 26.0133 197.073 28.3542C192.948 30.5837 189.604 33.6493 187.04 37.5509C184.476 41.341 182.581 45.6886 181.355 50.5934C180.24 55.4983 179.683 60.5704 179.683 65.8098ZM153.43 65.8098C153.43 56.8918 154.768 48.6426 157.444 41.0623C160.119 33.3706 163.965 26.6821 168.981 20.9969C173.998 15.3117 180.129 10.8527 187.374 7.61992C194.732 4.38715 202.981 2.77077 212.122 2.77077C221.374 2.77077 229.623 4.38715 236.869 7.61992C244.115 10.8527 250.246 15.3117 255.263 20.9969C260.279 26.6821 264.125 33.3706 266.8 41.0623C269.476 48.6426 270.813 56.8918 270.813 65.8098C270.813 74.5048 269.476 82.6424 266.8 90.2227C264.125 97.6915 260.279 104.213 255.263 109.787C250.246 115.36 244.115 119.764 236.869 122.996C229.623 126.118 221.374 127.678 212.122 127.678C202.981 127.678 194.732 126.118 187.374 122.996C180.129 119.764 173.998 115.36 168.981 109.787C163.965 104.213 160.119 97.6915 157.444 90.2227C154.768 82.6424 153.43 74.5048 153.43 65.8098Z" fill="black"/>
+          <path d="M299.962 59.6229H328.722C334.742 59.6229 339.257 58.2852 342.267 55.6098C345.276 52.9344 346.781 48.5869 346.781 42.5673C346.781 36.7706 345.276 32.5903 342.267 30.0263C339.257 27.351 334.742 26.0133 328.722 26.0133H299.962V59.6229ZM273.71 5.61337H338.086C343.437 5.61337 348.23 6.50517 352.466 8.28877C356.814 9.96089 360.493 12.3019 363.502 15.3117C366.624 18.3215 368.965 21.8329 370.525 25.846C372.198 29.7477 373.034 33.9837 373.034 38.5542C373.034 45.5771 371.529 51.6524 368.519 56.7803C365.62 61.9081 360.827 65.8097 354.139 68.4851V68.8196C357.371 69.7114 360.047 71.1048 362.165 72.9999C364.283 74.7835 366.011 76.9572 367.348 79.5211C368.686 81.9736 369.634 84.7047 370.191 87.7145C370.86 90.7244 371.306 93.7342 371.529 96.744C371.64 98.6391 371.752 100.869 371.863 103.432C371.975 105.996 372.142 108.616 372.365 111.291C372.699 113.967 373.145 116.531 373.702 118.983C374.371 121.324 375.319 123.331 376.545 125.003H350.293C348.844 121.213 347.952 116.698 347.617 111.459C347.283 106.219 346.781 101.203 346.112 96.4096C345.221 90.167 343.326 85.5965 340.427 82.6982C337.529 79.7998 332.791 78.3507 326.214 78.3507H299.962V125.003H273.71V5.61337Z" fill="black"/>
+          <path d="M405.586 61.7967H425.986C428.996 61.7967 431.894 61.5737 434.681 61.1278C437.468 60.6819 439.921 59.8458 442.039 58.6196C444.157 57.2819 445.829 55.4426 447.055 53.1016C448.393 50.7607 449.062 47.6951 449.062 43.905C449.062 40.1148 448.393 37.0493 447.055 34.7083C445.829 32.3673 444.157 30.5837 442.039 29.3575C439.921 28.0198 437.468 27.128 434.681 26.6821C431.894 26.2362 428.996 26.0133 425.986 26.0133H405.586V61.7967ZM379.334 5.61337H433.176C440.645 5.61337 446.999 6.72812 452.239 8.95762C457.478 11.0756 461.714 13.9182 464.947 17.4854C468.291 21.0526 470.688 25.1215 472.137 29.6919C473.697 34.2624 474.478 39.0001 474.478 43.905C474.478 48.6984 473.697 53.436 472.137 58.118C470.688 62.6885 468.291 66.7573 464.947 70.3245C461.714 73.8917 457.478 76.79 452.239 79.0195C446.999 81.1375 440.645 82.1965 433.176 82.1965H405.586V125.003H379.334V5.61337Z" fill="black"/>
+          <path d="M475.814 5.61337H502.066V51.4295H550.391V5.61337H576.643V125.003H550.391V73.5015H502.066V125.003H475.814V5.61337Z" fill="black"/>
+        </svg>
+      </div>
+      <p class="landing-tagline">Turn images or PDFs into a print-ready file. Add one file or several — Morph compiles them into a single flattened PDF/X-1a, CMYK TIFF, or high-res PNG set, one page per source. Nothing you upload ever leaves your browser.</p>
+      <label class="btn btn-primary btn-lg" for="fileInputLanding" style="cursor:pointer;">Convert Files</label>
+      <input type="file" id="fileInputLanding" accept="image/png,image/jpeg,image/webp,application/pdf" multiple hidden>
+      <p class="landing-note">PNG, JPEG, WebP, or PDF in (every PDF page becomes its own page) — press-ready PDF, TIFF, or PNG out. Processing happens entirely on this device.</p>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor" id="editorView" hidden>
+    <div class="pages-strip">
+      <div class="pages-strip-items" id="pagesStripItems"></div>
+      <button class="page-add-btn" id="addMoreBtn" type="button" aria-label="Add files">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <input type="file" id="fileInputMore" accept="image/png,image/jpeg,image/webp,application/pdf" multiple hidden>
+    </div>
+    <div class="editor-layout">
+      <div class="preview-pane">
+        <div class="page-stage">
+          <div class="page-outline" id="pageOutline">
+            <div class="content-area fit-contain" id="contentArea">
+              <img id="previewImg" alt="">
+            </div>
+          </div>
+        </div>
+        <p class="page-caption" id="pageCaption"></p>
+        <div class="page-nav" id="pageNav">
+          <button id="prevPageBtn" type="button" aria-label="Previous page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <span id="pageNavLabel">Page 1 of 1</span>
+          <button id="nextPageBtn" type="button" aria-label="Next page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <div class="mismatch-banner" id="mismatchBanner" hidden></div>
+      </div>
+
+      <div class="controls-pane">
+
+        <div class="ctrl-section">
+          <div class="ctrl-section-head"><span class="eyebrow">Source</span></div>
+          <dl class="source-info">
+            <div><dt>File</dt><dd id="infoFileName">—</dd></div>
+            <div><dt>Pixels</dt><dd id="infoPixels">—</dd></div>
+            <div><dt>Detected DPI</dt><dd id="infoDetectedDpi">—</dd></div>
+            <div><dt>Source DPI</dt><dd><input type="number" id="sourceDpiInput" min="1" max="2400" style="width:5rem; padding:0.15rem 0.35rem; font-family:var(--mono-font); font-size:0.78rem;"></dd></div>
+          </dl>
+        </div>
+
+        <div class="ctrl-section">
+          <div class="ctrl-section-head"><span class="eyebrow">Page Size</span>
+            <button class="chip-toggle" id="orientationBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h10v16H4z"/><path d="M20 20V8a2 2 0 0 0-2-2h-2"/><path d="M22 10l-4-4 4-4" transform="translate(-2 4)"/></svg>
+              <span id="orientationLabel">Portrait</span>
+            </button>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="presetSelect">Preset</label>
+              <select id="presetSelect"></select>
+            </div>
+            <div class="field" style="max-width:5rem;">
+              <label for="unitSelect">Unit</label>
+              <select id="unitSelect">
+                <option value="mm">mm</option>
+                <option value="cm">cm</option>
+                <option value="in">in</option>
+                <option value="pt">pt</option>
+                <option value="px">px</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="widthInput">Width</label>
+              <input type="number" id="widthInput" min="0.01" step="any">
+            </div>
+            <div class="field">
+              <label for="heightInput">Height</label>
+              <input type="number" id="heightInput" min="0.01" step="any">
+            </div>
+          </div>
+          <p class="hint">Page size, DPI, and color settings apply to every page in the compiled export.</p>
+        </div>
+
+        <div class="ctrl-section">
+          <div class="ctrl-section-head"><span class="eyebrow">Fit Mode</span></div>
+          <div class="segmented" id="fitSegmented">
+            <button data-fit="contain" class="active" type="button">Fit within</button>
+            <button data-fit="cover" type="button">Fill</button>
+          </div>
+          <p class="hint" id="fitHint">Fit within shows the whole image with no cropping. Fill crops to remove empty space.</p>
+        </div>
+
+        <div class="ctrl-section">
+          <div class="ctrl-section-head">
+            <span class="eyebrow">Padding</span>
+            <button class="chip-toggle active" id="padLinkBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a4 4 0 0 0 4 4h1a4 4 0 0 0 0-8h-1"/><path d="M15 12a4 4 0 0 0-4-4H10a4 4 0 0 0 0 8h1"/></svg>
+              Linked
+            </button>
+          </div>
+          <div class="pad-grid">
+            <div class="field"><label for="padTop">Top</label><input type="number" id="padTop" min="0" step="any" value="0"></div>
+            <div class="field"><label for="padRight">Right</label><input type="number" id="padRight" min="0" step="any" value="0"></div>
+            <div class="field"><label for="padBottom">Bottom</label><input type="number" id="padBottom" min="0" step="any" value="0"></div>
+            <div class="field"><label for="padLeft">Left</label><input type="number" id="padLeft" min="0" step="any" value="0"></div>
+          </div>
+        </div>
+
+        <div class="ctrl-section">
+          <div class="ctrl-section-head"><span class="eyebrow">Resolution</span></div>
+          <div class="slider-row">
+            <input type="range" id="dpiSlider" min="150" max="600" step="1" value="300">
+            <span class="slider-value" id="dpiValue">300 DPI</span>
+          </div>
+          <p class="hint" id="dpiHint"></p>
+        </div>
+
+        <div class="ctrl-section">
+          <div class="ctrl-section-head">
+            <span class="eyebrow">Color</span>
+            <div class="toggle-row" style="gap:0.5rem;">
+              <span style="font-size:0.72rem; color:var(--muted); font-weight:600;">CMYK</span>
+              <button class="switch" id="cmykSwitch" type="button" aria-label="Toggle CMYK"></button>
+            </div>
+          </div>
+          <div class="field-row" id="profileRow">
+            <div class="field">
+              <label for="profileSelect">Output Profile</label>
+              <select id="profileSelect"></select>
+            </div>
+          </div>
+          <div class="field-row" id="customIccRow" hidden>
+            <div class="field">
+              <label for="customIccInput">Custom ICC file</label>
+              <input type="file" id="customIccInput" accept=".icc,.icm">
+            </div>
+          </div>
+          <div class="field-row" id="blackModeRow" hidden>
+            <div class="field">
+              <label for="blackModeSelect">Solid black handling</label>
+              <select id="blackModeSelect">
+                <option value="plain">Plain black (K only)</option>
+                <option value="rich">Rich black (deeper, CMY+K)</option>
+                <option value="registration">Registration (C100 M100 Y100 K100)</option>
+              </select>
+            </div>
+          </div>
+          <p class="hint" id="colorHint"></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Export overlay -->
+  <div class="export-overlay" id="exportOverlay" hidden>
+    <div class="export-topbar">
+      <h2>Export</h2>
+      <button id="closeExportBtn" class="btn btn-ghost">Back to edit</button>
+    </div>
+    <div class="export-body">
+      <div class="page-stage" style="max-height:70vh;">
+        <div class="page-outline" id="exportPageOutline">
+          <div class="content-area fit-contain" id="exportContentArea">
+            <img id="exportPreviewImg" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="export-note" id="exportNote"></p>
+    <div class="export-bar">
+      <button id="exportPdfBtn" class="btn btn-primary">Export PDF/X-1a</button>
+      <button id="exportTiffBtn" class="btn btn-outline">Export TIFF</button>
+      <button id="exportPngBtn" class="btn btn-outline">Export PNG</button>
+    </div>
+  </div>
+
+  <!-- Export progress -->
+  <div class="export-progress" id="exportProgress" hidden>
+    <div class="export-progress-track"><div class="export-progress-bar" id="exportProgressBar"></div></div>
+    <div class="export-progress-label" id="exportProgressLabel">Preparing…</div>
+  </div>
+
+  <!-- Info modal -->
+  <div class="info-overlay" id="infoOverlay" hidden>
+    <div class="info-card">
+      <button class="info-close" id="infoCloseBtn" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <span class="eyebrow">About</span>
+      <h2>Morph</h2>
+      <p>Morph converts images and PDFs into a print-ready file. Add one file or several — every PDF page and every image becomes its own page — pick a page size and unit, choose whether each page fits within the page or fills it, set independent padding, dial in DPI, and optionally convert to CMYK for press output. Multiple sources compile into a single output file, one page per source.</p>
+      <h3>PDF input</h3>
+      <p>Uploaded PDFs are rasterized page-by-page in your browser (via pdf.js) at a print-appropriate resolution, then treated exactly like an image for layout and export. Vector content, live text, and layers are flattened in the process — this matches how the final press-ready output works either way.</p>
+      <h3>Color accuracy</h3>
+      <p>Browsers have no built-in color-management engine, so CMYK conversion here is a documented <strong>device approximation</strong> (proper black generation, not a naive channel inversion) — not a true ICC-managed transform. Named output profiles (SWOP v2, FOGRA39) tag the export with the correct industry-standard identifier but are not embedded as binaries unless you upload your own ICC file, which is embedded verbatim.</p>
+      <h3>PDF/X-1a</h3>
+      <p>PDF exports are hand-written to be structurally compliant with PDF/X-1a — CMYK-only color, embedded OutputIntent, no transparency. This is best-effort compliance; it is not run through a certified preflight validator.</p>
+      <h3>Privacy</h3>
+      <p>Every conversion happens in your browser. Nothing you upload is sent anywhere.</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================= constants ============================= */
+  var PT_PER_IN = 72, MM_PER_IN = 25.4;
+  var UNIT_LABEL = { mm:"mm", cm:"cm", in:"in", pt:"pt", px:"px" };
+  var MAX_CANVAS_DIM = 16000;
+  var MAX_CANVAS_MP = 100; // megapixels safety cap
+  var PDFJS_CANDIDATES = [
+    { lib:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js", worker:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js" },
+    { lib:"https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.min.js", worker:"https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.worker.min.js" },
+    { lib:"https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.min.js", worker:"https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.worker.min.js" }
+  ];
+
+  var SIZE_GROUPS = [
+    { label:"ISO A", unit:"mm", sizes:[
+      ["A0",841,1189],["A1",594,841],["A2",420,594],["A3",297,420],["A4",210,297],["A5",148,210],["A6",105,148]
+    ]},
+    { label:"ISO B", unit:"mm", sizes:[
+      ["B0",1000,1414],["B1",707,1000],["B2",500,707],["B3",353,500],["B4",250,353],["B5",176,250],["B6",125,176]
+    ]},
+    { label:"US", unit:"in", sizes:[
+      ["Letter",8.5,11],["Legal",8.5,14],["Tabloid",11,17]
+    ]}
+  ];
+
+  var CMYK_PROFILES = [
+    { value:"swop2", label:"U.S. Web Coated (SWOP) v2 — approx", cond:"CGATS TR 001", desc:"U.S. Web Coated (SWOP) v2" },
+    { value:"fogra39", label:"FOGRA39 — approx", cond:"FOGRA39", desc:"ISO Coated v2 (FOGRA39)" },
+    { value:"generic", label:"Generic Device CMYK", cond:"Custom", desc:"Generic uncalibrated device CMYK" },
+    { value:"custom", label:"Custom ICC upload…", cond:"Custom", desc:"Custom uploaded ICC profile" }
+  ];
+  var RGB_PROFILES = [
+    { value:"srgb", label:"sRGB IEC61966-2.1", desc:"sRGB IEC61966-2.1" },
+    { value:"adobergb", label:"Adobe RGB (1998) — approx", desc:"Adobe RGB (1998)" },
+    { value:"custom", label:"Custom ICC upload…", desc:"Custom uploaded ICC profile" }
+  ];
+
+  var ICON_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>';
+  var ICON_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>';
+  var ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+  /* ============================= state ============================= */
+  var items = [];   // { id, kind:'image'|'pdfpage', fileName, naturalW, naturalH, rasterSource, previewUrl, detectedDpi, sourceDpi }
+  var nextId = 1;
+  var activeItemId = null;
+
+  var state = {
+    sizeUnit:"mm", pageWidth:210, pageHeight:297, presetKey:"A4", orientation:"portrait",
+    fitMode:"contain",
+    padLinked:true, padTop:0, padRight:0, padBottom:0, padLeft:0,
+    dpi:300,
+    cmyk:false,
+    rgbProfile:"srgb", cmykProfile:"swop2",
+    customIccBytes:null, customIccName:"",
+    blackMode:"plain"
+  };
+
+  function activeItem(){
+    for(var i=0;i<items.length;i++){ if(items[i].id === activeItemId) return items[i]; }
+    return items[0] || null;
+  }
+  function activeIndex(){
+    for(var i=0;i<items.length;i++){ if(items[i].id === activeItemId) return i; }
+    return -1;
+  }
+
+  /* ============================= dom refs ============================= */
+  var els = {};
+  ["landingView","editorView","fileInputLanding","logoHomeBtn","infoBtn","infoOverlay","infoCloseBtn",
+   "topbarActions","downloadBtn","pageOutline","contentArea","previewImg","pageCaption","mismatchBanner",
+   "pagesStripItems","addMoreBtn","fileInputMore","pageNav","prevPageBtn","nextPageBtn","pageNavLabel",
+   "infoFileName","infoPixels","infoDetectedDpi","sourceDpiInput",
+   "orientationBtn","orientationLabel","presetSelect","unitSelect","widthInput","heightInput",
+   "fitSegmented","fitHint","padLinkBtn","padTop","padRight","padBottom","padLeft",
+   "dpiSlider","dpiValue","dpiHint","cmykSwitch","profileRow","profileSelect","customIccRow","customIccInput",
+   "blackModeRow","blackModeSelect","colorHint",
+   "exportOverlay","closeExportBtn","exportPageOutline","exportContentArea","exportPreviewImg","exportNote",
+   "exportPdfBtn","exportTiffBtn","exportPngBtn",
+   "exportProgress","exportProgressBar","exportProgressLabel","toast"
+  ].forEach(function(id){ els[id] = document.getElementById(id); });
+
+  /* ============================= unit conversion ============================= */
+  function mmToPt(mm){ return mm/MM_PER_IN*PT_PER_IN; }
+  function ptToMm(pt){ return pt/PT_PER_IN*MM_PER_IN; }
+  function convert(value, fromUnit, toUnit, dpiCtx){
+    if(fromUnit === toUnit) return value;
+    var pt;
+    switch(fromUnit){
+      case "pt": pt = value; break;
+      case "mm": pt = mmToPt(value); break;
+      case "cm": pt = mmToPt(value*10); break;
+      case "in": pt = value*PT_PER_IN; break;
+      case "px": pt = (value/dpiCtx)*PT_PER_IN; break;
+      default: pt = value;
+    }
+    switch(toUnit){
+      case "pt": return pt;
+      case "mm": return ptToMm(pt);
+      case "cm": return ptToMm(pt)/10;
+      case "in": return pt/PT_PER_IN;
+      case "px": return (pt/PT_PER_IN)*dpiCtx;
+      default: return pt;
+    }
+  }
+  function fmtUnit(v, unit){
+    var dec = (unit==="px") ? 0 : (unit==="pt" ? 1 : 2);
+    return v.toFixed(dec) + " " + UNIT_LABEL[unit];
+  }
+
+  /* ============================= toast ============================= */
+  var toastTimer = null;
+  function showToast(msg, ms){
+    els.toast.textContent = msg;
+    els.toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ els.toast.hidden = true; }, ms || 3200);
+  }
+
+  /* ============================= view switching ============================= */
+  function showView(view){
+    els.landingView.hidden = view !== "landing";
+    els.editorView.hidden = view !== "editor";
+    els.topbarActions.hidden = view !== "editor";
+  }
+
+  /* ============================= DPI detection ============================= */
+  function detectDpiFromBuffer(buf, mimeType){
+    var view = new DataView(buf);
+    try {
+      if(mimeType === "image/png"){ return detectPngDpi(view); }
+      if(mimeType === "image/jpeg"){ return detectJpegDpi(view); }
+    } catch(e){ /* ignore, fall through */ }
+    return null;
+  }
+  function detectPngDpi(view){
+    if(view.byteLength < 33) return null;
+    var offset = 8;
+    while(offset + 8 <= view.byteLength){
+      var len = view.getUint32(offset);
+      var type = String.fromCharCode(view.getUint8(offset+4), view.getUint8(offset+5), view.getUint8(offset+6), view.getUint8(offset+7));
+      if(type === "pHYs"){
+        var ppuX = view.getUint32(offset+8);
+        var unit = view.getUint8(offset+8+8);
+        if(unit === 1){ return Math.round(ppuX * 0.0254); }
+        return null;
+      }
+      if(type === "IDAT") return null;
+      offset += 8 + len + 4;
+    }
+    return null;
+  }
+  function detectJpegDpi(view){
+    if(view.getUint16(0) !== 0xFFD8) return null;
+    var offset = 2;
+    while(offset + 4 <= view.byteLength){
+      var marker = view.getUint16(offset);
+      if((marker & 0xFF00) !== 0xFF00) break;
+      var segLen = view.getUint16(offset+2);
+      if(marker === 0xFFE0){
+        var units = view.getUint8(offset+2+2+5+2);
+        var xd = view.getUint16(offset+2+2+5+2+1);
+        if(units === 1) return xd;
+        if(units === 2) return Math.round(xd * 2.54);
+      }
+      if(marker === 0xFFE1){
+        var dpi = parseExifResolution(view, offset+4, segLen-2);
+        if(dpi) return dpi;
+      }
+      if(marker === 0xFFDA) break;
+      offset += 2 + segLen;
+    }
+    return null;
+  }
+  function parseExifResolution(view, start, len){
+    try {
+      var base = start;
+      var id = String.fromCharCode.apply(null, [0,1,2,3,4,5].map(function(i){ return view.getUint8(base+i); }));
+      if(id.indexOf("Exif") !== 0) return null;
+      var tiffStart = base + 6;
+      var little = view.getUint16(tiffStart) === 0x4949;
+      function u16(o){ return view.getUint16(o, little); }
+      function u32(o){ return view.getUint32(o, little); }
+      var ifd0Offset = u32(tiffStart+4);
+      var ifdOffset = tiffStart + ifd0Offset;
+      var count = u16(ifdOffset);
+      var xRes = null, resUnit = 2;
+      for(var i=0;i<count;i++){
+        var entry = ifdOffset + 2 + i*12;
+        var tag = u16(entry);
+        if(tag === 0x011A){
+          var valOffset = tiffStart + u32(entry+8);
+          var num = u32(valOffset), den = u32(valOffset+4);
+          if(den) xRes = num/den;
+        }
+        if(tag === 0x0128){ resUnit = u16(entry+8); }
+      }
+      if(xRes){ return resUnit === 3 ? Math.round(xRes*2.54) : Math.round(xRes); }
+    } catch(e){}
+    return null;
+  }
+
+  /* ============================= pdf.js loader ============================= */
+  var _pdfJsLoading = null;
+  function loadScript(src){
+    return new Promise(function(resolve, reject){
+      var s = document.createElement("script");
+      s.src = src; s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  function ensurePdfJs(){
+    if(window.pdfjsLib) return Promise.resolve();
+    if(_pdfJsLoading) return _pdfJsLoading;
+    _pdfJsLoading = (async function(){
+      for(var i=0;i<PDFJS_CANDIDATES.length;i++){
+        try {
+          await loadScript(PDFJS_CANDIDATES[i].lib);
+          if(window.pdfjsLib){
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_CANDIDATES[i].worker;
+            return;
+          }
+        } catch(e){ /* try next CDN */ }
+      }
+      throw new Error("Could not load the PDF engine. Check your connection and try again.");
+    })();
+    return _pdfJsLoading;
+  }
+
+  /* ============================= file loading ============================= */
+  function isPdfFile(f){ return f.type === "application/pdf" || /\.pdf$/i.test(f.name); }
+  function isImageFile(f){ return /^image\/(png|jpeg|webp)$/.test(f.type); }
+
+  function addImageItem(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){
+        var buf = reader.result;
+        var blob = new Blob([buf], { type:file.type });
+        var url = URL.createObjectURL(blob);
+        var img = new Image();
+        img.onload = function(){
+          var detected = detectDpiFromBuffer(buf, file.type);
+          items.push({
+            id: nextId++, kind:"image", fileName:file.name,
+            naturalW: img.naturalWidth, naturalH: img.naturalHeight,
+            rasterSource: img, previewUrl: url,
+            detectedDpi: detected, sourceDpi: detected || 72
+          });
+          resolve();
+        };
+        img.onerror = function(){ reject(new Error("Couldn't read " + file.name + ".")); };
+        img.src = url;
+      };
+      reader.onerror = function(){ reject(new Error("Couldn't read " + file.name + ".")); };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  async function addPdfPages(file, onProgress){
+    await ensurePdfJs();
+    var buf = await file.arrayBuffer();
+    var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+    for(var p=1; p<=pdf.numPages; p++){
+      if(onProgress) onProgress((p-1)/pdf.numPages, "Rendering " + file.name + " — page " + p + " of " + pdf.numPages + "…");
+      var page = await pdf.getPage(p);
+      var vp1 = page.getViewport({ scale:1 });
+      var targetLongEdge = 2600;
+      var scale = Math.min(4, Math.max(1, targetLongEdge / Math.max(vp1.width, vp1.height)));
+      var viewport = page.getViewport({ scale:scale });
+      var canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(viewport.width));
+      canvas.height = Math.max(1, Math.round(viewport.height));
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0,0,canvas.width,canvas.height);
+      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+      var label = pdf.numPages > 1 ? (file.name + " — p" + p) : file.name;
+      items.push({
+        id: nextId++, kind:"pdfpage", fileName: label,
+        naturalW: canvas.width, naturalH: canvas.height,
+        rasterSource: canvas, previewUrl: canvas.toDataURL("image/png"),
+        detectedDpi: null, sourceDpi: 72
+      });
+    }
+    if(onProgress) onProgress(1, "Done");
+  }
+
+  async function handleFiles(fileList){
+    var files = Array.prototype.slice.call(fileList).filter(function(f){ return isImageFile(f) || isPdfFile(f); });
+    if(!files.length){ showToast("Please choose PNG, JPEG, WebP, or PDF files."); return; }
+    var wasEmpty = items.length === 0;
+    showExportProgress("Reading files…");
+    for(var i=0;i<files.length;i++){
+      var f = files[i];
+      try {
+        if(isPdfFile(f)){
+          await addPdfPages(f, function(pageFrac, label){ setExportProgress((i+pageFrac)/files.length, label); });
+        } else {
+          setExportProgress(i/files.length, "Reading " + f.name + "…");
+          await addImageItem(f);
+        }
+      } catch(err){
+        console.error(err);
+        showToast((err && err.message) || ("Couldn't read " + f.name + "."));
+      }
+    }
+    setExportProgress(1, "Done");
+    hideExportProgress();
+    if(items.length){
+      if(wasEmpty){ activeItemId = items[0].id; showView("editor"); }
+      else if(activeIndex() < 0){ activeItemId = items[items.length-1].id; }
+      syncItemsUI();
+      syncControlsFromState();
+      render();
+    }
+  }
+
+  els.fileInputLanding.addEventListener("change", function(){
+    if(this.files && this.files.length) handleFiles(this.files);
+    this.value = "";
+  });
+  els.addMoreBtn.addEventListener("click", function(){ els.fileInputMore.click(); });
+  els.fileInputMore.addEventListener("change", function(){
+    if(this.files && this.files.length) handleFiles(this.files);
+    this.value = "";
+  });
+
+  els.logoHomeBtn.addEventListener("click", function(){
+    items = []; activeItemId = null;
+    showView("landing");
+  });
+
+  /* ============================= pages strip ============================= */
+  function syncItemsUI(){
+    var html = "";
+    items.forEach(function(it, idx){
+      html += '<div class="page-thumb' + (it.id===activeItemId?' active':'') + '" data-id="' + it.id + '" tabindex="0">' +
+        '<img src="' + it.previewUrl + '" alt="">' +
+        '<span class="page-thumb-label">' + (idx+1) + '</span>' +
+        '<div class="page-thumb-actions">' +
+          (idx>0 ? '<button type="button" data-act="up" data-id="'+it.id+'" aria-label="Move earlier">'+ICON_UP+'</button>' : '') +
+          (idx<items.length-1 ? '<button type="button" data-act="down" data-id="'+it.id+'" aria-label="Move later">'+ICON_DOWN+'</button>' : '') +
+          '<button type="button" data-act="remove" data-id="' + it.id + '" aria-label="Remove">' + ICON_X + '</button>' +
+        '</div>' +
+      '</div>';
+    });
+    els.pagesStripItems.innerHTML = html;
+  }
+  els.pagesStripItems.addEventListener("click", function(e){
+    var actBtn = e.target.closest("button[data-act]");
+    if(actBtn){
+      e.stopPropagation();
+      var id = parseInt(actBtn.dataset.id, 10);
+      var act = actBtn.dataset.act;
+      var idx = items.findIndex(function(it){ return it.id === id; });
+      if(idx < 0) return;
+      if(act === "remove"){
+        items.splice(idx, 1);
+        if(activeItemId === id){ activeItemId = items.length ? items[Math.min(idx, items.length-1)].id : null; }
+        if(!items.length){ showView("landing"); syncItemsUI(); return; }
+      } else if(act === "up" && idx > 0){
+        var tmp = items[idx-1]; items[idx-1] = items[idx]; items[idx] = tmp;
+      } else if(act === "down" && idx < items.length-1){
+        var tmp2 = items[idx+1]; items[idx+1] = items[idx]; items[idx] = tmp2;
+      }
+      syncItemsUI();
+      syncControlsFromState();
+      render();
+      return;
+    }
+    var thumb = e.target.closest(".page-thumb");
+    if(thumb){
+      activeItemId = parseInt(thumb.dataset.id, 10);
+      syncItemsUI();
+      syncControlsFromState();
+      render();
+    }
+  });
+
+  els.prevPageBtn.addEventListener("click", function(){
+    var idx = activeIndex();
+    if(idx > 0){ activeItemId = items[idx-1].id; syncItemsUI(); syncControlsFromState(); render(); }
+  });
+  els.nextPageBtn.addEventListener("click", function(){
+    var idx = activeIndex();
+    if(idx >= 0 && idx < items.length-1){ activeItemId = items[idx+1].id; syncItemsUI(); syncControlsFromState(); render(); }
+  });
+
+  /* ============================= size preset handling ============================= */
+  function populatePresets(){
+    var html = '<option value="custom">Custom</option>';
+    SIZE_GROUPS.forEach(function(group){
+      html += '<optgroup label="'+group.label+'">';
+      group.sizes.forEach(function(s){
+        html += '<option value="'+s[0]+'">'+s[0]+' ('+s[1]+'×'+s[2]+' '+UNIT_LABEL[group.unit]+')</option>';
+      });
+      html += '</optgroup>';
+    });
+    els.presetSelect.innerHTML = html;
+  }
+  function findPreset(key){
+    for(var i=0;i<SIZE_GROUPS.length;i++){
+      var g = SIZE_GROUPS[i];
+      for(var j=0;j<g.sizes.length;j++){
+        if(g.sizes[j][0] === key) return { unit:g.unit, w:g.sizes[j][1], h:g.sizes[j][2] };
+      }
+    }
+    return null;
+  }
+  function applyPreset(key){
+    var p = findPreset(key);
+    if(!p){ state.presetKey = "custom"; return; }
+    state.presetKey = key;
+    state.sizeUnit = p.unit;
+    state.pageWidth = p.w;
+    state.pageHeight = p.h;
+    state.orientation = "portrait";
+  }
+
+  /* ============================= profile selects ============================= */
+  function populateProfiles(){
+    var list = state.cmyk ? CMYK_PROFILES : RGB_PROFILES;
+    els.profileSelect.innerHTML = list.map(function(p){ return '<option value="'+p.value+'">'+p.label+'</option>'; }).join("");
+    els.profileSelect.value = state.cmyk ? state.cmykProfile : state.rgbProfile;
+  }
+
+  /* ============================= sync UI <-> state ============================= */
+  function syncControlsFromState(){
+    var it = activeItem();
+    els.infoFileName.textContent = it ? it.fileName : "—";
+    els.infoPixels.textContent = it ? (it.naturalW + " × " + it.naturalH) : "—";
+    els.infoDetectedDpi.textContent = it ? (it.detectedDpi ? (it.detectedDpi + " dpi") : "not found") : "—";
+    els.sourceDpiInput.value = it ? it.sourceDpi : "";
+    els.sourceDpiInput.disabled = !it;
+
+    els.presetSelect.innerHTML || populatePresets();
+    els.presetSelect.value = state.presetKey;
+    els.unitSelect.value = state.sizeUnit;
+    els.widthInput.value = round2(state.pageWidth);
+    els.heightInput.value = round2(state.pageHeight);
+    els.orientationLabel.textContent = state.orientation === "portrait" ? "Portrait" : "Landscape";
+    els.padTop.value = round2(state.padTop);
+    els.padRight.value = round2(state.padRight);
+    els.padBottom.value = round2(state.padBottom);
+    els.padLeft.value = round2(state.padLeft);
+    els.padLinkBtn.classList.toggle("active", state.padLinked);
+    els.dpiSlider.value = state.dpi;
+    els.dpiValue.textContent = state.dpi + " DPI";
+    els.cmykSwitch.classList.toggle("on", state.cmyk);
+    populateProfiles();
+    els.customIccRow.hidden = els.profileSelect.value !== "custom";
+    els.blackModeRow.hidden = !state.cmyk;
+    els.blackModeSelect.value = state.blackMode;
+    Array.prototype.forEach.call(els.fitSegmented.querySelectorAll("button"), function(b){
+      b.classList.toggle("active", b.dataset.fit === state.fitMode);
+    });
+    els.contentArea.className = "content-area fit-" + state.fitMode;
+    els.exportContentArea.className = "content-area fit-" + state.fitMode;
+
+    var idx = activeIndex();
+    els.pageNav.hidden = items.length <= 1;
+    els.pageNavLabel.textContent = "Page " + (idx>=0?idx+1:0) + " of " + items.length;
+    els.prevPageBtn.disabled = idx <= 0;
+    els.nextPageBtn.disabled = idx < 0 || idx >= items.length-1;
+
+    els.exportNote.textContent = items.length > 1
+      ? ("Compiling " + items.length + " pages. PDF and TIFF export as one multi-page file; PNG exports as a .zip of numbered pages.")
+      : "";
+  }
+  function round2(v){ return Math.round(v*100)/100; }
+
+  /* ============================= rendering (live preview) ============================= */
+  function render(){
+    var it = activeItem();
+    if(!it){ return; }
+    els.previewImg.src = it.previewUrl;
+    els.exportPreviewImg.src = it.previewUrl;
+
+    var w = state.pageWidth, h = state.pageHeight;
+    els.pageOutline.style.aspectRatio = w + " / " + h;
+    els.exportPageOutline.style.aspectRatio = w + " / " + h;
+    var pt = state.padTop, pr = state.padRight, pb = state.padBottom, pl = state.padLeft;
+    var topPct = clampPct(pt / h * 100), rightPct = clampPct(pr / w * 100), botPct = clampPct(pb / h * 100), leftPct = clampPct(pl / w * 100);
+    [els.contentArea, els.exportContentArea].forEach(function(el){
+      el.style.top = topPct + "%";
+      el.style.right = rightPct + "%";
+      el.style.bottom = botPct + "%";
+      el.style.left = leftPct + "%";
+    });
+
+    var pageWpx = Math.round(convert(w, state.sizeUnit, "px", state.dpi));
+    var pageHpx = Math.round(convert(h, state.sizeUnit, "px", state.dpi));
+    els.pageCaption.innerHTML = "<strong>" + fmtUnit(w, state.sizeUnit) + " × " + fmtUnit(h, state.sizeUnit) +
+      "</strong> at " + state.dpi + " DPI &nbsp;→&nbsp; " + pageWpx + " × " + pageHpx + " px";
+
+    updateMismatchBanner(it);
+    updateDpiHint(it, pageWpx, pageHpx);
+    updateColorHint();
+  }
+  function clampPct(v){ return Math.max(0, Math.min(49, v)); }
+
+  function computeMismatch(it){
+    var contentW = state.pageWidth - state.padLeft - state.padRight;
+    var contentH = state.pageHeight - state.padTop - state.padBottom;
+    if(contentW <= 0 || contentH <= 0 || !it) return { invalid:true };
+    var contentAspect = contentW/contentH;
+    var imgAspect = it.naturalW/it.naturalH;
+    var diff = Math.abs(contentAspect - imgAspect) / imgAspect;
+    if(diff < 0.008) return { mismatch:false };
+    if(state.fitMode === "contain"){
+      var drawW, drawH;
+      if(imgAspect > contentAspect){ drawW = contentW; drawH = contentW/imgAspect; }
+      else { drawH = contentH; drawW = contentH*imgAspect; }
+      return { mismatch:true, mode:"contain", emptyW: contentW-drawW, emptyH: contentH-drawH };
+    } else {
+      var dW, dH;
+      if(imgAspect > contentAspect){ dH = contentH; dW = contentH*imgAspect; }
+      else { dW = contentW; dH = contentW/imgAspect; }
+      return { mismatch:true, mode:"cover", cropW: dW-contentW, cropH: dH-contentH };
+    }
+  }
+  function updateMismatchBanner(it){
+    var m = computeMismatch(it);
+    if(!m || m.invalid || !m.mismatch){ els.mismatchBanner.hidden = true; return; }
+    var u = state.sizeUnit;
+    var pageLabel = items.length > 1 ? ("Page " + (activeIndex()+1) + " — ") : "";
+    var msg;
+    if(m.mode === "contain"){
+      if(m.emptyW > 0.01){
+        msg = "<strong>" + pageLabel + "Aspect mismatch —</strong> Fit within will letterbox with " + fmtUnit(m.emptyW, u) + " of empty space split left/right.";
+      } else {
+        msg = "<strong>" + pageLabel + "Aspect mismatch —</strong> Fit within will letterbox with " + fmtUnit(m.emptyH, u) + " of empty space split top/bottom.";
+      }
+    } else {
+      if(m.cropW > 0.01){
+        msg = "<strong>" + pageLabel + "Aspect mismatch —</strong> Fill will crop " + fmtUnit(m.cropW, u) + " total off the left/right edges.";
+      } else {
+        msg = "<strong>" + pageLabel + "Aspect mismatch —</strong> Fill will crop " + fmtUnit(m.cropH, u) + " total off the top/bottom edges.";
+      }
+    }
+    els.mismatchBanner.innerHTML = msg;
+    els.mismatchBanner.hidden = false;
+  }
+
+  function updateDpiHint(it, pageWpx, pageHpx){
+    var contentW = state.pageWidth - state.padLeft - state.padRight;
+    var contentH = state.pageHeight - state.padTop - state.padBottom;
+    if(contentW <= 0 || contentH <= 0 || !it){ els.dpiHint.textContent = ""; return; }
+    var contentWpx = convert(contentW, state.sizeUnit, "px", state.dpi);
+    var contentHpx = convert(contentH, state.sizeUnit, "px", state.dpi);
+    var imgAspect = it.naturalW/it.naturalH, areaAspect = contentWpx/contentHpx;
+    var scale;
+    if(state.fitMode === "contain"){
+      scale = imgAspect > areaAspect ? (contentWpx/it.naturalW) : (contentHpx/it.naturalH);
+    } else {
+      scale = imgAspect > areaAspect ? (contentHpx/it.naturalH) : (contentWpx/it.naturalW);
+    }
+    var mp = (pageWpx*pageHpx)/1e6;
+    var msgs = [];
+    if(scale > 1.02){
+      msgs.push('<span class="hint warn"><strong>Upscaling ~' + scale.toFixed(2) + '×</strong> on this page to reach ' + state.dpi + ' DPI at this size — detail may soften.</span>');
+    }
+    if(mp > MAX_CANVAS_MP || pageWpx > MAX_CANVAS_DIM || pageHpx > MAX_CANVAS_DIM){
+      msgs.push('<span class="hint warn"><strong>Too large to export</strong> — ' + Math.round(mp) + ' megapixels exceeds what a browser can safely render. Lower the DPI or choose a smaller page.</span>');
+    }
+    els.dpiHint.innerHTML = msgs.join("<br>");
+  }
+
+  function updateColorHint(){
+    if(!state.cmyk){
+      els.colorHint.textContent = "RGB export. PNG is always RGB regardless of this setting.";
+      return;
+    }
+    els.colorHint.textContent = "CMYK is a device approximation (no ICC-managed transform) — see the info panel for details. Applies to PDF and TIFF only; PNG stays RGB.";
+  }
+
+  function canvasTooLarge(wpx, hpx){
+    return wpx > MAX_CANVAS_DIM || hpx > MAX_CANVAS_DIM || (wpx*hpx)/1e6 > MAX_CANVAS_MP;
+  }
+
+  /* ============================= control wiring ============================= */
+  els.sourceDpiInput.addEventListener("change", function(){
+    var it = activeItem(); if(!it) return;
+    var v = parseFloat(this.value);
+    if(v > 0){ it.sourceDpi = v; }
+    render();
+  });
+
+  els.presetSelect.addEventListener("change", function(){
+    var v = this.value;
+    if(v === "custom"){ state.presetKey = "custom"; }
+    else { applyPreset(v); }
+    syncControlsFromState();
+    render();
+  });
+  els.unitSelect.addEventListener("change", function(){
+    var newUnit = this.value;
+    state.pageWidth = convert(state.pageWidth, state.sizeUnit, newUnit, state.dpi);
+    state.pageHeight = convert(state.pageHeight, state.sizeUnit, newUnit, state.dpi);
+    state.padTop = convert(state.padTop, state.sizeUnit, newUnit, state.dpi);
+    state.padRight = convert(state.padRight, state.sizeUnit, newUnit, state.dpi);
+    state.padBottom = convert(state.padBottom, state.sizeUnit, newUnit, state.dpi);
+    state.padLeft = convert(state.padLeft, state.sizeUnit, newUnit, state.dpi);
+    state.sizeUnit = newUnit;
+    syncControlsFromState();
+    render();
+  });
+  els.widthInput.addEventListener("input", function(){
+    var v = parseFloat(this.value); if(!(v>0)) return;
+    state.pageWidth = v; state.presetKey = "custom"; els.presetSelect.value = "custom";
+    render();
+  });
+  els.heightInput.addEventListener("input", function(){
+    var v = parseFloat(this.value); if(!(v>0)) return;
+    state.pageHeight = v; state.presetKey = "custom"; els.presetSelect.value = "custom";
+    render();
+  });
+  els.orientationBtn.addEventListener("click", function(){
+    state.orientation = state.orientation === "portrait" ? "landscape" : "portrait";
+    var tmp = state.pageWidth; state.pageWidth = state.pageHeight; state.pageHeight = tmp;
+    syncControlsFromState();
+    render();
+  });
+
+  els.fitSegmented.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-fit]");
+    if(!btn) return;
+    state.fitMode = btn.dataset.fit;
+    syncControlsFromState();
+    render();
+  });
+
+  els.padLinkBtn.addEventListener("click", function(){
+    state.padLinked = !state.padLinked;
+    syncControlsFromState();
+  });
+  function wirePad(input, key){
+    input.addEventListener("input", function(){
+      var v = parseFloat(this.value); if(isNaN(v) || v < 0) v = 0;
+      if(state.padLinked){
+        state.padTop = state.padRight = state.padBottom = state.padLeft = v;
+        syncControlsFromState();
+      } else {
+        state[key] = v;
+      }
+      render();
+    });
+  }
+  wirePad(els.padTop, "padTop");
+  wirePad(els.padRight, "padRight");
+  wirePad(els.padBottom, "padBottom");
+  wirePad(els.padLeft, "padLeft");
+
+  els.dpiSlider.addEventListener("input", function(){
+    state.dpi = parseInt(this.value, 10);
+    els.dpiValue.textContent = state.dpi + " DPI";
+    render();
+  });
+
+  els.cmykSwitch.addEventListener("click", function(){
+    state.cmyk = !state.cmyk;
+    syncControlsFromState();
+    render();
+  });
+  els.profileSelect.addEventListener("change", function(){
+    if(state.cmyk) state.cmykProfile = this.value; else state.rgbProfile = this.value;
+    els.customIccRow.hidden = this.value !== "custom";
+    render();
+  });
+  els.customIccInput.addEventListener("change", function(){
+    var f = this.files && this.files[0];
+    if(!f) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      state.customIccBytes = new Uint8Array(reader.result);
+      state.customIccName = f.name;
+      showToast("Loaded ICC profile: " + f.name);
+    };
+    reader.readAsArrayBuffer(f);
+  });
+  els.blackModeSelect.addEventListener("change", function(){
+    state.blackMode = this.value;
+  });
+
+  /* ============================= info modal ============================= */
+  els.infoBtn.addEventListener("click", function(){ els.infoOverlay.hidden = false; });
+  els.infoCloseBtn.addEventListener("click", function(){ els.infoOverlay.hidden = true; });
+  els.infoOverlay.addEventListener("click", function(e){ if(e.target === els.infoOverlay) els.infoOverlay.hidden = true; });
+
+  /* ============================= export overlay ============================= */
+  els.downloadBtn.addEventListener("click", function(){
+    els.exportOverlay.hidden = false;
+  });
+  els.closeExportBtn.addEventListener("click", function(){ els.exportOverlay.hidden = true; });
+
+  /* ============================= progress bar ============================= */
+  function showExportProgress(label){
+    els.exportProgress.hidden = false;
+    els.exportProgressBar.style.width = "0%";
+    els.exportProgressLabel.textContent = label || "Preparing…";
+  }
+  function setExportProgress(frac, label){
+    els.exportProgressBar.style.width = Math.round(Math.max(0,Math.min(1,frac))*100) + "%";
+    if(label) els.exportProgressLabel.textContent = label;
+  }
+  function hideExportProgress(){ setTimeout(function(){ els.exportProgress.hidden = true; }, 300); }
+
+  async function runExport(btn, fn){
+    if(btn.disabled) return;
+    var buttons = [els.exportPdfBtn, els.exportTiffBtn, els.exportPngBtn];
+    buttons.forEach(function(b){ b.disabled = true; });
+    showExportProgress("Preparing…");
+    try {
+      await fn(function(frac, label){ setExportProgress(frac, label); });
+      setExportProgress(1, "Done");
+    } catch(err){
+      console.error(err);
+      showToast(err && err.message ? err.message : "Export failed — try a smaller page or lower DPI.");
+    } finally {
+      buttons.forEach(function(b){ b.disabled = false; });
+      hideExportProgress();
+    }
+  }
+
+  function downloadBlob(blob, filename){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+  }
+
+  function baseFileName(){
+    if(!items.length) return "morph-export";
+    if(items.length === 1) return (items[0].fileName.replace(/\.[^.]+$/, "") || "morph-export");
+    return "morph-compiled";
+  }
+
+  /* ============================= raster compositor ============================= */
+  function computeExportPixelSize(){
+    return {
+      pageWpx: Math.round(convert(state.pageWidth, state.sizeUnit, "px", state.dpi)),
+      pageHpx: Math.round(convert(state.pageHeight, state.sizeUnit, "px", state.dpi))
+    };
+  }
+  async function compositeItemToCanvas(item, pageWpx, pageHpx){
+    var canvas = document.createElement("canvas");
+    canvas.width = pageWpx; canvas.height = pageHpx;
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, pageWpx, pageHpx);
+
+    var padTpx = convert(state.padTop, state.sizeUnit, "px", state.dpi);
+    var padRpx = convert(state.padRight, state.sizeUnit, "px", state.dpi);
+    var padBpx = convert(state.padBottom, state.sizeUnit, "px", state.dpi);
+    var padLpx = convert(state.padLeft, state.sizeUnit, "px", state.dpi);
+    var cw = pageWpx - padLpx - padRpx, ch = pageHpx - padTpx - padBpx;
+    if(cw <= 0 || ch <= 0) throw new Error("Padding leaves no room for the image — reduce padding.");
+
+    var imgAspect = item.naturalW/item.naturalH, areaAspect = cw/ch;
+    var dw, dh, dx, dy, sx=0, sy=0, sw=item.naturalW, sh=item.naturalH;
+    if(state.fitMode === "contain"){
+      if(imgAspect > areaAspect){ dw = cw; dh = cw/imgAspect; } else { dh = ch; dw = ch*imgAspect; }
+      dx = padLpx + (cw-dw)/2; dy = padTpx + (ch-dh)/2;
+    } else {
+      if(imgAspect > areaAspect){ sh = item.naturalH; sw = sh*areaAspect; sx = (item.naturalW-sw)/2; sy = 0; }
+      else { sw = item.naturalW; sh = sw/areaAspect; sx = 0; sy = (item.naturalH-sh)/2; }
+      dw = cw; dh = ch; dx = padLpx; dy = padTpx;
+    }
+    ctx.drawImage(item.rasterSource, sx, sy, sw, sh, dx, dy, dw, dh);
+    return { canvas:canvas };
+  }
+
+  /* ============================= CMYK conversion ============================= */
+  function rgbToCmykPixel(r, g, b, blackMode){
+    var isNearBlack = (r < 10 && g < 10 && b < 10);
+    if(isNearBlack){
+      if(blackMode === "rich") return [0.60, 0.50, 0.40, 1];
+      if(blackMode === "registration") return [1, 1, 1, 1];
+      return [0, 0, 0, 1];
+    }
+    var rf = r/255, gf = g/255, bf = b/255;
+    var k = 1 - Math.max(rf, gf, bf);
+    if(k >= 1) return [0, 0, 0, 1];
+    var c = (1-rf-k)/(1-k), m = (1-gf-k)/(1-k), y = (1-bf-k)/(1-k);
+    return [c, m, y, k];
+  }
+  async function canvasToCmykBuffer(canvas, onProgress, startFrac, endFrac){
+    var w = canvas.width, h = canvas.height;
+    var ctx = canvas.getContext("2d");
+    var imgData = ctx.getImageData(0, 0, w, h).data;
+    var out = new Uint8Array(w*h*4);
+    var rowsPerChunk = Math.max(1, Math.floor(2000000/w));
+    var y = 0;
+    while(y < h){
+      var yEnd = Math.min(h, y+rowsPerChunk);
+      for(var row=y; row<yEnd; row++){
+        var rowBase = row*w*4;
+        for(var col=0; col<w; col++){
+          var i = rowBase + col*4;
+          var cmyk = rgbToCmykPixel(imgData[i], imgData[i+1], imgData[i+2], state.blackMode);
+          out[i]   = Math.round(cmyk[0]*255);
+          out[i+1] = Math.round(cmyk[1]*255);
+          out[i+2] = Math.round(cmyk[2]*255);
+          out[i+3] = Math.round(cmyk[3]*255);
+        }
+      }
+      y = yEnd;
+      if(onProgress) onProgress(startFrac + (endFrac-startFrac)*(y/h), "Converting to CMYK…");
+      await new Promise(function(r){ setTimeout(r, 0); });
+    }
+    return out; // interleaved CMYK, 4 bytes/px
+  }
+  function rgbBufferFromCanvas(canvas){
+    var w = canvas.width, h = canvas.height;
+    var ctx = canvas.getContext("2d");
+    var data = ctx.getImageData(0,0,w,h).data;
+    var out = new Uint8Array(w*h*3);
+    for(var p=0,q=0; p<data.length; p+=4,q+=3){ out[q]=data[p]; out[q+1]=data[p+1]; out[q+2]=data[p+2]; }
+    return out;
+  }
+
+  /* ============================= deflate helper ============================= */
+  async function deflate(bytes){
+    if(typeof CompressionStream === "function"){
+      var cs = new CompressionStream("deflate");
+      var writer = cs.writable.getWriter();
+      writer.write(bytes);
+      writer.close();
+      var out = await new Response(cs.readable).arrayBuffer();
+      return new Uint8Array(out);
+    }
+    throw new Error("This browser can't compress data for export. Try a recent Chrome, Edge, or Safari.");
+  }
+
+  /* ============================= sRGB ICC profile builder ============================= */
+  function buildSRGBICC(){
+    function s15Fixed16(v){
+      var b = new ArrayBuffer(4); var dv = new DataView(b);
+      dv.setInt32(0, Math.round(v*65536));
+      return new Uint8Array(b);
+    }
+    function u32be(v){ var b=new ArrayBuffer(4); new DataView(b).setUint32(0,v); return new Uint8Array(b); }
+    function u16be(v){ var b=new ArrayBuffer(2); new DataView(b).setUint16(0,v); return new Uint8Array(b); }
+    function sig(s){ var out=new Uint8Array(4); for(var i=0;i<4;i++) out[i]=s.charCodeAt(i)||0x20; return out; }
+    function concat(arrs){
+      var len=0; arrs.forEach(function(a){ len+=a.length; });
+      var out=new Uint8Array(len); var o=0;
+      arrs.forEach(function(a){ out.set(a,o); o+=a.length; });
+      return out;
+    }
+    function xyzType(x,y,z){ return concat([sig("XYZ "), u32be(0), s15Fixed16(x), s15Fixed16(y), s15Fixed16(z)]); }
+    function curvType(gamma){
+      var g = Math.round(gamma*256);
+      return concat([sig("curv"), u32be(0), u32be(1), u16be(g)]);
+    }
+    function textType(str){
+      var strBytes = new TextEncoder().encode(str+"\0");
+      return concat([sig("text"), u32be(0), strBytes]);
+    }
+    function descType(str){
+      var strBytes = new TextEncoder().encode(str+"\0");
+      var mac = new Uint8Array(67);
+      return concat([sig("desc"), u32be(0), u32be(strBytes.length), strBytes, u32be(0), u32be(0), new Uint8Array([0,0]), new Uint8Array([0]), mac]);
+    }
+    function pad4(bytes){
+      var rem = bytes.length % 4;
+      if(rem === 0) return bytes;
+      return concat([bytes, new Uint8Array(4-rem)]);
+    }
+
+    var tags = [
+      ["desc", descType("sRGB IEC61966-2.1 (Morph approximation)")],
+      ["cprt", textType("Public Domain / generated at runtime")],
+      ["wtpt", xyzType(0.9642, 1.0, 0.8249)],
+      ["rXYZ", xyzType(0.4361, 0.2225, 0.0139)],
+      ["gXYZ", xyzType(0.3851, 0.7169, 0.0971)],
+      ["bXYZ", xyzType(0.1431, 0.0606, 0.7139)],
+      ["rTRC", curvType(2.2)],
+      ["gTRC", curvType(2.2)],
+      ["bTRC", curvType(2.2)]
+    ].map(function(t){ return [t[0], pad4(t[1])]; });
+
+    var headerSize = 128;
+    var tagTableSize = 4 + tags.length*12;
+    var offset = headerSize + tagTableSize;
+    var entries = [];
+    var dataParts = [];
+    tags.forEach(function(t){
+      entries.push({ tag:t[0], offset:offset, size:t[1].length });
+      dataParts.push(t[1]);
+      offset += t[1].length;
+    });
+    var totalSize = offset;
+
+    var header = new Uint8Array(128);
+    var hv = new DataView(header.buffer);
+    hv.setUint32(0, totalSize);
+    header.set(sig("appl"), 4);
+    hv.setUint32(8, 0x02100000);
+    header.set(sig("mntr"), 12);
+    header.set(sig("RGB "), 16);
+    header.set(sig("XYZ "), 20);
+    header.set(sig("acsp"), 36);
+    header.set(s15Fixed16(0.9642), 68);
+    header.set(s15Fixed16(1.0), 72);
+    header.set(s15Fixed16(0.8249), 76);
+
+    var tagTable = new Uint8Array(tagTableSize);
+    var tv = new DataView(tagTable.buffer);
+    tv.setUint32(0, tags.length);
+    entries.forEach(function(e, idx){
+      var base = 4 + idx*12;
+      tagTable.set(sig(e.tag), base);
+      tv.setUint32(base+4, e.offset);
+      tv.setUint32(base+8, e.size);
+    });
+
+    var full = concat([header, tagTable].concat(dataParts));
+    var check = new DataView(full.buffer);
+    var n = check.getUint32(128);
+    if(n !== tags.length) throw new Error("ICC self-check failed (tag count)");
+    for(var i=0;i<n;i++){
+      var base = 128+4+i*12;
+      var off = check.getUint32(base+4), sz = check.getUint32(base+8);
+      if(off+sz > full.length) throw new Error("ICC self-check failed (tag bounds)");
+    }
+    return full;
+  }
+  var _srgbIccCache = null;
+  function getSRGBICC(){ if(!_srgbIccCache) _srgbIccCache = buildSRGBICC(); return _srgbIccCache; }
+
+  /* ============================= zip writer (STORED entries) ============================= */
+  var CRC_TABLE = (function(){
+    var table = new Uint32Array(256);
+    for(var n=0;n<256;n++){
+      var c = n;
+      for(var k=0;k<8;k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); }
+      table[n] = c >>> 0;
+    }
+    return table;
+  })();
+  function crc32(bytes){
+    var crc = 0xFFFFFFFF;
+    for(var i=0;i<bytes.length;i++){ crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8); }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zu16(v){ var b=new ArrayBuffer(2); new DataView(b).setUint16(0,v,true); return new Uint8Array(b); }
+  function zu32(v){ var b=new ArrayBuffer(4); new DataView(b).setUint32(0,v>>>0,true); return new Uint8Array(b); }
+  function zconcat(arrs){ var len=0; arrs.forEach(function(a){len+=a.length;}); var out=new Uint8Array(len); var o=0; arrs.forEach(function(a){out.set(a,o);o+=a.length;}); return out; }
+  function buildZipStored(entries){
+    var localParts = [];
+    var centralParts = [];
+    var offset = 0;
+    entries.forEach(function(entry){
+      var nameBytes = new TextEncoder().encode(entry.name);
+      var crc = crc32(entry.bytes);
+      var size = entry.bytes.length;
+      var localHeader = zconcat([
+        zu32(0x04034b50), zu16(20), zu16(0), zu16(0), zu16(0), zu16(0x21),
+        zu32(crc), zu32(size), zu32(size), zu16(nameBytes.length), zu16(0), nameBytes
+      ]);
+      var localOffset = offset;
+      localParts.push(localHeader, entry.bytes);
+      offset += localHeader.length + entry.bytes.length;
+
+      var centralHeader = zconcat([
+        zu32(0x02014b50), zu16(20), zu16(20), zu16(0), zu16(0), zu16(0), zu16(0x21),
+        zu32(crc), zu32(size), zu32(size), zu16(nameBytes.length), zu16(0), zu16(0),
+        zu16(0), zu16(0), zu32(0), zu32(localOffset), nameBytes
+      ]);
+      centralParts.push(centralHeader);
+    });
+    var centralStart = offset;
+    var centralBytes = zconcat(centralParts);
+    var eocd = zconcat([
+      zu32(0x06054b50), zu16(0), zu16(0), zu16(entries.length), zu16(entries.length),
+      zu32(centralBytes.length), zu32(centralStart), zu16(0)
+    ]);
+    return zconcat(localParts.concat([centralBytes, eocd]));
+  }
+
+  /* ============================= PDF/X-1a writer (multi-page) ============================= */
+  function pdfEscape(str){ return str.replace(/([()\\])/g, "\\$1"); }
+
+  function PDFWriter(){
+    this.chunks = [];
+    this.offset = 0;
+    this.objOffsets = {};
+  }
+  PDFWriter.prototype.push = function(bytesOrStr){
+    var bytes = (typeof bytesOrStr === "string") ? new TextEncoder().encode(bytesOrStr) : bytesOrStr;
+    this.chunks.push(bytes);
+    this.offset += bytes.length;
+  };
+  PDFWriter.prototype.beginObj = function(num){
+    this.objOffsets[num] = this.offset;
+    this.push(num + " 0 obj\n");
+  };
+  PDFWriter.prototype.endObj = function(){ this.push("endobj\n"); };
+  PDFWriter.prototype.toBlob = function(){ return new Blob(this.chunks, { type:"application/pdf" }); };
+
+  async function buildPDFX1A(onProgress){
+    var dims = computeExportPixelSize();
+    if(canvasTooLarge(dims.pageWpx, dims.pageHpx)){
+      throw new Error("This page size at " + state.dpi + " DPI is too large to render. Lower the DPI or choose a smaller page.");
+    }
+    var pageWpt = convert(dims.pageWpx, "px", "pt", state.dpi);
+    var pageHpt = convert(dims.pageHpx, "px", "pt", state.dpi);
+    var N = items.length;
+
+    var useCustom = state.cmykProfile === "custom" && state.customIccBytes;
+    var profileMeta = CMYK_PROFILES.filter(function(p){ return p.value === state.cmykProfile; })[0] || CMYK_PROFILES[2];
+    var iccCompressed = useCustom ? await deflate(state.customIccBytes) : null;
+    var hasIcc = !!iccCompressed;
+
+    var baseObj = 3 + (hasIcc ? 1 : 0); // 1=catalog 2=pages 3=outputintent [4=icc]
+    var kidsRefs = [];
+    for(var k=0;k<N;k++){ kidsRefs.push((baseObj+k*3+1) + " 0 R"); }
+
+    var w1 = new PDFWriter();
+    w1.push("%PDF-1.3\n%\xE2\xE3\xCF\xD3\n");
+
+    w1.beginObj(1);
+    w1.push("<< /Type /Catalog /Pages 2 0 R /OutputIntents [3 0 R] >>\n");
+    w1.endObj();
+
+    w1.beginObj(2);
+    w1.push("<< /Type /Pages /Kids [" + kidsRefs.join(" ") + "] /Count " + N + " >>\n");
+    w1.endObj();
+
+    w1.beginObj(3);
+    var oi = "<< /Type /OutputIntent /S /GTS_PDFX /OutputConditionIdentifier (" + pdfEscape(profileMeta.cond) +
+      ") /OutputCondition (" + pdfEscape(profileMeta.desc) + ") /RegistryName (http://www.color.org)";
+    if(hasIcc) oi += " /DestOutputProfile 4 0 R";
+    oi += " /Info (" + pdfEscape(profileMeta.desc) + ") >>\n";
+    w1.push(oi);
+    w1.endObj();
+
+    if(hasIcc){
+      w1.beginObj(4);
+      w1.push("<< /N 4 /Alternate /DeviceCMYK /Filter /FlateDecode /Length " + iccCompressed.length + " >>\nstream\n");
+      w1.push(iccCompressed);
+      w1.push("\nendstream\n");
+      w1.endObj();
+    }
+
+    for(var idx=0; idx<N; idx++){
+      var item = items[idx];
+      var pageObjNum = baseObj+idx*3+1, imageObjNum = baseObj+idx*3+2, contentObjNum = baseObj+idx*3+3;
+      var localStart = idx/N, localSpan = 1/N;
+      if(onProgress) onProgress(0.03 + 0.9*localStart, "Page " + (idx+1) + " of " + N + "…");
+      var built = await compositeItemToCanvas(item, dims.pageWpx, dims.pageHpx);
+      var cmykPacked = await canvasToCmykBuffer(built.canvas, onProgress, 0.03 + 0.9*(localStart+localSpan*0.05), 0.03 + 0.9*(localStart+localSpan*0.75));
+      var compressed = await deflate(cmykPacked);
+
+      w1.beginObj(pageObjNum);
+      w1.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + pageWpt.toFixed(2) + " " + pageHpt.toFixed(2) +
+        "] /TrimBox [0 0 " + pageWpt.toFixed(2) + " " + pageHpt.toFixed(2) +
+        "] /Resources << /XObject << /Im0 " + imageObjNum + " 0 R >> >> /Contents " + contentObjNum +
+        " 0 R /Group << /Type /Group /S /Transparency /CS /DeviceCMYK /I false /K false >> >>\n");
+      w1.endObj();
+
+      w1.beginObj(imageObjNum);
+      w1.push("<< /Type /XObject /Subtype /Image /Width " + dims.pageWpx + " /Height " + dims.pageHpx +
+        " /BitsPerComponent 8 /ColorSpace /DeviceCMYK /Filter /FlateDecode /Length " + compressed.length + " >>\nstream\n");
+      w1.push(compressed);
+      w1.push("\nendstream\n");
+      w1.endObj();
+
+      var contentStr = "q " + pageWpt.toFixed(2) + " 0 0 " + pageHpt.toFixed(2) + " 0 0 cm /Im0 Do Q";
+      var contentBytes = new TextEncoder().encode(contentStr);
+      w1.beginObj(contentObjNum);
+      w1.push("<< /Length " + contentBytes.length + " >>\nstream\n");
+      w1.push(contentBytes);
+      w1.push("\nendstream\n");
+      w1.endObj();
+    }
+
+    var infoObjNum = baseObj + N*3 + 1;
+    w1.beginObj(infoObjNum);
+    w1.push("<< /Title (" + pdfEscape(baseFileName()) + ") /GTS_PDFXVersion (PDF/X-1a:2001) /GTS_PDFXConformance (PDF/X-1a:2001) /Trapped /False /Producer (Morph) >>\n");
+    w1.endObj();
+
+    var xrefStart = w1.offset;
+    var totalObjs = infoObjNum;
+    w1.push("xref\n0 " + (totalObjs+1) + "\n0000000000 65535 f \n");
+    for(var n=1;n<=totalObjs;n++){
+      var off = w1.objOffsets[n] || 0;
+      w1.push(String(off).padStart(10,"0") + " 00000 n \n");
+    }
+    w1.push("trailer\n<< /Size " + (totalObjs+1) + " /Root 1 0 R /Info " + infoObjNum + " 0 R >>\nstartxref\n" + xrefStart + "\n%%EOF");
+
+    if(onProgress) onProgress(0.98, "Finalizing…");
+    return w1.toBlob();
+  }
+
+  /* ============================= TIFF writer (multi-page IFD chain) ============================= */
+  function tu16(v){ var b=new ArrayBuffer(2); new DataView(b).setUint16(0,v,true); return new Uint8Array(b); }
+  function tu32(v){ var b=new ArrayBuffer(4); new DataView(b).setUint32(0,v,true); return new Uint8Array(b); }
+  function tconcat(arrs){ var len=0; arrs.forEach(function(a){len+=a.length;}); var out=new Uint8Array(len); var o=0; arrs.forEach(function(a){out.set(a,o);o+=a.length;}); return out; }
+
+  function computeTiffBlockSize(pixelBytesLen, channels, hasIcc, iccLen){
+    var IFD_ENTRY_COUNT = 12 + (hasIcc?1:0) + (channels===4?1:0);
+    var ifdSize = 2 + IFD_ENTRY_COUNT*12 + 4;
+    var extraSize = channels*2 + 8 + 8 + (hasIcc?iccLen:0);
+    return pixelBytesLen + ifdSize + extraSize;
+  }
+
+  function buildTiffPageBlock(baseOffset, pixelBuf, w, h, channels, dpi, iccBytes, photometric, nextIfdOffset){
+    var IFD_ENTRY_COUNT = 12 + (iccBytes ? 1 : 0) + (channels===4?1:0);
+    var pixelBytes = pixelBuf.length;
+    var ifdOffset = baseOffset + pixelBytes;
+    var ifdSize = 2 + IFD_ENTRY_COUNT*12 + 4;
+    var cursor = ifdOffset + ifdSize;
+
+    var bpsBytes = new Uint8Array(channels*2);
+    var bpsView = new DataView(bpsBytes.buffer);
+    for(var i=0;i<channels;i++) bpsView.setUint16(i*2, 8, true);
+    var bpsOffset = cursor; cursor += bpsBytes.length;
+
+    var xresBytes = tconcat([tu32(Math.round(dpi)), tu32(1)]);
+    var xresOffset = cursor; cursor += xresBytes.length;
+    var yresBytes = tconcat([tu32(Math.round(dpi)), tu32(1)]);
+    var yresOffset = cursor; cursor += yresBytes.length;
+
+    var extraChunks = [bpsBytes, xresBytes, yresBytes];
+    var iccOffset = 0;
+    if(iccBytes){ iccOffset = cursor; cursor += iccBytes.length; extraChunks.push(iccBytes); }
+
+    function entry(tag, type, count, valueOrOffset, inline){
+      var e = tconcat([tu16(tag), tu16(type), tu32(count)]);
+      var vb;
+      if(inline){
+        if(type===3){ vb = tconcat([tu16(valueOrOffset), tu16(0)]); }
+        else { vb = tu32(valueOrOffset); }
+      } else { vb = tu32(valueOrOffset); }
+      return tconcat([e, vb]);
+    }
+
+    var entries = [];
+    entries.push(entry(256, 4, 1, w, true));
+    entries.push(entry(257, 4, 1, h, true));
+    entries.push(entry(258, 3, channels, channels===1?8:bpsOffset, channels===1));
+    entries.push(entry(259, 3, 1, 1, true));
+    entries.push(entry(262, 3, 1, photometric, true));
+    entries.push(entry(273, 4, 1, baseOffset, true));
+    entries.push(entry(277, 3, 1, channels, true));
+    entries.push(entry(278, 4, 1, h, true));
+    entries.push(entry(279, 4, 1, pixelBytes, true));
+    entries.push(entry(282, 5, 1, xresOffset, false));
+    entries.push(entry(283, 5, 1, yresOffset, false));
+    entries.push(entry(296, 3, 1, 2, true));
+    if(channels===4) entries.push(entry(332, 3, 1, 1, true));
+    if(iccBytes) entries.push(entry(34675, 7, iccBytes.length, iccOffset, false));
+
+    var tagOrder = [256,257,258,259,262,273,277,278,279,282,283,296];
+    if(channels===4) tagOrder.push(332);
+    if(iccBytes) tagOrder.push(34675);
+    var pairs = entries.map(function(e,idx){ return { tag:tagOrder[idx], bytes:e }; });
+    pairs.sort(function(a,b){ return a.tag-b.tag; });
+    var ifdEntriesBytes = tconcat(pairs.map(function(p){ return p.bytes; }));
+    var ifd = tconcat([tu16(pairs.length), ifdEntriesBytes, tu32(nextIfdOffset)]);
+
+    return tconcat([pixelBuf, ifd].concat(extraChunks));
+  }
+  function buildTiffHeader(firstIfdOffset){
+    return tconcat([new Uint8Array([0x49,0x49]), tu16(42), tu32(firstIfdOffset)]);
+  }
+
+  async function buildMultiPageTIFF(onProgress){
+    var dims = computeExportPixelSize();
+    if(canvasTooLarge(dims.pageWpx, dims.pageHpx)){
+      throw new Error("This page size at " + state.dpi + " DPI is too large to render. Lower the DPI or choose a smaller page.");
+    }
+    var N = items.length;
+    var metas = [];
+    var runningOffset = 8;
+    for(var idx=0; idx<N; idx++){
+      var localStart = idx/N, localSpan = 1/N;
+      if(onProgress) onProgress(0.03 + 0.85*localStart, "Page " + (idx+1) + " of " + N + "…");
+      var built = await compositeItemToCanvas(items[idx], dims.pageWpx, dims.pageHpx);
+      var pixelBuf, channels, photometric, iccBytes = null;
+      if(state.cmyk){
+        pixelBuf = await canvasToCmykBuffer(built.canvas, onProgress, 0.03 + 0.85*(localStart+localSpan*0.1), 0.03 + 0.85*(localStart+localSpan*0.9));
+        channels = 4; photometric = 5;
+        if(state.cmykProfile === "custom" && state.customIccBytes) iccBytes = state.customIccBytes;
+      } else {
+        pixelBuf = rgbBufferFromCanvas(built.canvas);
+        channels = 3; photometric = 2;
+        if(state.rgbProfile === "srgb") iccBytes = getSRGBICC();
+        else if(state.rgbProfile === "custom" && state.customIccBytes) iccBytes = state.customIccBytes;
+      }
+      var blockSize = computeTiffBlockSize(pixelBuf.length, channels, !!iccBytes, iccBytes ? iccBytes.length : 0);
+      metas.push({ pixelBuf:pixelBuf, channels:channels, photometric:photometric, iccBytes:iccBytes, blockBaseOffset:runningOffset, blockSize:blockSize });
+      runningOffset += blockSize;
+    }
+    var firstIfdOffset = metas[0].blockBaseOffset + metas[0].pixelBuf.length;
+    var parts = [buildTiffHeader(firstIfdOffset)];
+    for(var i2=0; i2<metas.length; i2++){
+      var meta = metas[i2];
+      var nextIfdAbs = i2+1<metas.length ? (metas[i2+1].blockBaseOffset + metas[i2+1].pixelBuf.length) : 0;
+      parts.push(buildTiffPageBlock(meta.blockBaseOffset, meta.pixelBuf, dims.pageWpx, dims.pageHpx, meta.channels, state.dpi, meta.iccBytes, meta.photometric, nextIfdAbs));
+    }
+    if(onProgress) onProgress(0.97, "Finalizing…");
+    return new Blob(parts, { type:"image/tiff" });
+  }
+
+  /* ============================= PNG / ZIP export ============================= */
+  async function exportPNGorZip(onProgress){
+    var dims = computeExportPixelSize();
+    if(canvasTooLarge(dims.pageWpx, dims.pageHpx)){
+      throw new Error("This page size at " + state.dpi + " DPI is too large to render. Lower the DPI or choose a smaller page.");
+    }
+    if(items.length === 1){
+      if(onProgress) onProgress(0.2, "Compositing…");
+      var built = await compositeItemToCanvas(items[0], dims.pageWpx, dims.pageHpx);
+      if(onProgress) onProgress(0.6, "Encoding PNG…");
+      var blob = await new Promise(function(resolve){ built.canvas.toBlob(resolve, "image/png"); });
+      if(!blob) throw new Error("PNG encoding failed.");
+      if(onProgress) onProgress(0.98, "Finalizing…");
+      return { blob:blob, filename: baseFileName() + ".png" };
+    }
+    var entries = [];
+    for(var idx=0; idx<items.length; idx++){
+      if(onProgress) onProgress(0.03 + 0.85*(idx/items.length), "Page " + (idx+1) + " of " + items.length + "…");
+      var built2 = await compositeItemToCanvas(items[idx], dims.pageWpx, dims.pageHpx);
+      var pngBlob = await new Promise(function(resolve){ built2.canvas.toBlob(resolve, "image/png"); });
+      var buf = new Uint8Array(await pngBlob.arrayBuffer());
+      var num = String(idx+1).padStart(2, "0");
+      entries.push({ name: baseFileName() + "-page-" + num + ".png", bytes: buf });
+    }
+    if(onProgress) onProgress(0.92, "Zipping…");
+    var zipBytes = buildZipStored(entries);
+    if(onProgress) onProgress(0.98, "Finalizing…");
+    return { blob: new Blob([zipBytes], { type:"application/zip" }), filename: baseFileName() + "-pages.zip" };
+  }
+
+  /* ============================= export button wiring ============================= */
+  els.exportPdfBtn.addEventListener("click", function(){
+    if(!state.cmyk){ showToast("PDF/X-1a requires CMYK — converting automatically using your selected profile."); }
+    runExport(els.exportPdfBtn, async function(onProgress){
+      var blob = await buildPDFX1A(onProgress);
+      downloadBlob(blob, baseFileName() + "-print.pdf");
+    });
+  });
+  els.exportTiffBtn.addEventListener("click", function(){
+    runExport(els.exportTiffBtn, async function(onProgress){
+      var blob = await buildMultiPageTIFF(onProgress);
+      downloadBlob(blob, baseFileName() + (state.cmyk ? "-cmyk" : "-rgb") + ".tif");
+    });
+  });
+  els.exportPngBtn.addEventListener("click", function(){
+    runExport(els.exportPngBtn, async function(onProgress){
+      var res = await exportPNGorZip(onProgress);
+      downloadBlob(res.blob, res.filename);
+    });
+  });
+
+  /* ============================= drag & drop ============================= */
+  ["dragover","drop"].forEach(function(evt){
+    document.addEventListener(evt, function(e){ e.preventDefault(); });
+  });
+  els.landingView.addEventListener("drop", function(e){
+    e.preventDefault();
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if(files && files.length) handleFiles(files);
+  });
+  document.querySelector(".pages-strip").addEventListener("drop", function(e){
+    e.preventDefault();
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if(files && files.length) handleFiles(files);
+  });
+
+  /* ============================= init ============================= */
+  populatePresets();
+  showView("landing");
+})();
+</script>
+</body>
+</html>
