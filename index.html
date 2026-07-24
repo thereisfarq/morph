@@ -306,6 +306,30 @@
     padding: 0.65rem 1.1rem; border-radius: 8px; z-index: 400; box-shadow: 0 8px 24px #0004;
     max-width: 22rem; text-align: center; line-height: 1.4;
   }
+
+  /* ---------- share to story ---------- */
+  .share-story-overlay {
+    position: fixed; inset: 0; background: var(--bg); z-index: 130;
+    display: flex; flex-direction: column;
+  }
+  .share-story-topbar {
+    display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .share-story-topbar h2 { font-size: 0.85rem; font-weight: 700; }
+  .share-story-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; overflow: auto; }
+  .share-story-preview {
+    position: relative; width: 100%; max-width: 19rem; aspect-ratio: 9 / 16; background: #fff;
+    border: 1px solid var(--border); box-shadow: 0 2px 18px #0000001a;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .share-story-spacer-top { flex: 0.4; }
+  .share-story-brand { display: flex; flex-direction: column; align-items: center; gap: 0.55rem; padding: 0 2rem; }
+  .share-story-logo svg { height: 2.3rem; width: auto; display: block; }
+  .share-story-link { font-size: 0.7rem; font-weight: 700; color: var(--accent); text-decoration: underline; letter-spacing: 0.01em; }
+  .share-story-tagline { font-size: 0.6rem; color: var(--muted); text-align: center; padding: 0.6rem 2.4rem 0; line-height: 1.5; }
+  .share-story-spacer-bottom { flex: 1; }
+  .share-story-bar { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: center; }
 </style>
 </head>
 <body>
@@ -327,6 +351,11 @@
       <div class="topbar-actions" id="topbarActions" hidden>
         <button id="downloadBtn" class="topbar-icon-btn" aria-label="Export">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>
+        </button>
+      </div>
+      <div class="topbar-actions" id="landingActions">
+        <button id="landingShareBtn" class="topbar-icon-btn" aria-label="Share">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
         </button>
       </div>
       <button id="infoBtn" class="topbar-icon-btn" aria-label="About Morph">
@@ -533,6 +562,36 @@
     <div class="export-progress-label" id="exportProgressLabel">Preparing…</div>
   </div>
 
+  <!-- Share to story -->
+  <div class="share-story-overlay" id="shareStoryOverlay" hidden>
+    <div class="share-story-topbar">
+      <h2>Share</h2>
+      <button id="shareStoryCloseBtn" class="btn btn-ghost">Close</button>
+    </div>
+    <div class="share-story-body">
+      <div class="share-story-preview" id="shareStoryPreview">
+        <div class="share-story-spacer-top"></div>
+        <div class="share-story-brand">
+          <div class="share-story-logo">
+            <svg viewBox="0 0 577 128" xmlns="http://www.w3.org/2000/svg">
+              <path d="M133.352 0.667219C159.011 5.48911 159.7 36.6591 143.685 81.4337C134.041 108.643 120.781 126.725 103.56 126.725C92.7105 126.725 87.1998 116.22 87.1998 101.755C87.1998 101.066 87.1998 100.205 87.1998 99.3436C87.7164 86.7722 92.1938 71.9622 100.632 58.5298H98.7378C89.7829 72.8232 85.3055 88.8387 85.3055 101.755C77.2116 118.459 65.8457 126.725 53.2744 126.725C43.2862 126.725 39.3254 117.942 38.8087 106.232C38.8087 105.715 38.8087 105.199 38.8087 104.682C38.6365 88.1499 45.0083 66.9681 51.2079 57.4965H49.3136C42.9418 67.3125 36.3978 89.5276 37.0866 106.232C29.165 119.664 19.349 126.725 11.2551 126.725C-9.06564 126.725 2.47243 85.3946 12.1162 61.974C21.9322 38.3812 36.57 10.8276 58.6129 10.8276C71.012 10.8276 78.417 20.988 78.7615 36.8313C74.1118 46.9917 70.8398 58.3576 69.4621 69.7234H71.3564C72.7341 58.3576 76.0061 46.9917 80.6558 36.8313C91.3328 13.4108 110.104 -3.63803 133.352 0.667219Z" fill="#c41e24"/>
+              <path d="M179.683 65.8098C179.683 70.8261 180.24 75.731 181.355 80.5244C182.581 85.2064 184.476 89.4424 187.04 93.2325C189.604 97.0227 192.948 100.088 197.073 102.429C201.197 104.659 206.214 105.773 212.122 105.773C218.03 105.773 223.046 104.659 227.171 102.429C231.296 100.088 234.64 97.0227 237.204 93.2325C239.768 89.4424 241.607 85.2064 242.722 80.5244C243.948 75.731 244.561 70.8261 244.561 65.8098C244.561 60.5704 243.948 55.4983 242.722 50.5934C241.607 45.6886 239.768 41.341 237.204 37.5509C234.64 33.6493 231.296 30.5837 227.171 28.3542C223.046 26.0133 218.03 24.8428 212.122 24.8428C206.214 24.8428 201.197 26.0133 197.073 28.3542C192.948 30.5837 189.604 33.6493 187.04 37.5509C184.476 41.341 182.581 45.6886 181.355 50.5934C180.24 55.4983 179.683 60.5704 179.683 65.8098ZM153.43 65.8098C153.43 56.8918 154.768 48.6426 157.444 41.0623C160.119 33.3706 163.965 26.6821 168.981 20.9969C173.998 15.3117 180.129 10.8527 187.374 7.61992C194.732 4.38715 202.981 2.77077 212.122 2.77077C221.374 2.77077 229.623 4.38715 236.869 7.61992C244.115 10.8527 250.246 15.3117 255.263 20.9969C260.279 26.6821 264.125 33.3706 266.8 41.0623C269.476 48.6426 270.813 56.8918 270.813 65.8098C270.813 74.5048 269.476 82.6424 266.8 90.2227C264.125 97.6915 260.279 104.213 255.263 109.787C250.246 115.36 244.115 119.764 236.869 122.996C229.623 126.118 221.374 127.678 212.122 127.678C202.981 127.678 194.732 126.118 187.374 122.996C180.129 119.764 173.998 115.36 168.981 109.787C163.965 104.213 160.119 97.6915 157.444 90.2227C154.768 82.6424 153.43 74.5048 153.43 65.8098Z" fill="black"/>
+              <path d="M299.962 59.6229H328.722C334.742 59.6229 339.257 58.2852 342.267 55.6098C345.276 52.9344 346.781 48.5869 346.781 42.5673C346.781 36.7706 345.276 32.5903 342.267 30.0263C339.257 27.351 334.742 26.0133 328.722 26.0133H299.962V59.6229ZM273.71 5.61337H338.086C343.437 5.61337 348.23 6.50517 352.466 8.28877C356.814 9.96089 360.493 12.3019 363.502 15.3117C366.624 18.3215 368.965 21.8329 370.525 25.846C372.198 29.7477 373.034 33.9837 373.034 38.5542C373.034 45.5771 371.529 51.6524 368.519 56.7803C365.62 61.9081 360.827 65.8097 354.139 68.4851V68.8196C357.371 69.7114 360.047 71.1048 362.165 72.9999C364.283 74.7835 366.011 76.9572 367.348 79.5211C368.686 81.9736 369.634 84.7047 370.191 87.7145C370.86 90.7244 371.306 93.7342 371.529 96.744C371.64 98.6391 371.752 100.869 371.863 103.432C371.975 105.996 372.142 108.616 372.365 111.291C372.699 113.967 373.145 116.531 373.702 118.983C374.371 121.324 375.319 123.331 376.545 125.003H350.293C348.844 121.213 347.952 116.698 347.617 111.459C347.283 106.219 346.781 101.203 346.112 96.4096C345.221 90.167 343.326 85.5965 340.427 82.6982C337.529 79.7998 332.791 78.3507 326.214 78.3507H299.962V125.003H273.71V5.61337Z" fill="black"/>
+              <path d="M405.586 61.7967H425.986C428.996 61.7967 431.894 61.5737 434.681 61.1278C437.468 60.6819 439.921 59.8458 442.039 58.6196C444.157 57.2819 445.829 55.4426 447.055 53.1016C448.393 50.7607 449.062 47.6951 449.062 43.905C449.062 40.1148 448.393 37.0493 447.055 34.7083C445.829 32.3673 444.157 30.5837 442.039 29.3575C439.921 28.0198 437.468 27.128 434.681 26.6821C431.894 26.2362 428.996 26.0133 425.986 26.0133H405.586V61.7967ZM379.334 5.61337H433.176C440.645 5.61337 446.999 6.72812 452.239 8.95762C457.478 11.0756 461.714 13.9182 464.947 17.4854C468.291 21.0526 470.688 25.1215 472.137 29.6919C473.697 34.2624 474.478 39.0001 474.478 43.905C474.478 48.6984 473.697 53.436 472.137 58.118C470.688 62.6885 468.291 66.7573 464.947 70.3245C461.714 73.8917 457.478 76.79 452.239 79.0195C446.999 81.1375 440.645 82.1965 433.176 82.1965H405.586V125.003H379.334V5.61337Z" fill="black"/>
+              <path d="M475.814 5.61337H502.066V51.4295H550.391V5.61337H576.643V125.003H550.391V73.5015H502.066V125.003H475.814V5.61337Z" fill="black"/>
+            </svg>
+          </div>
+          <div class="share-story-link">ahfos.github.io/morph</div>
+        </div>
+        <div class="share-story-tagline">Print-ready file conversion, right in your browser.</div>
+        <div class="share-story-spacer-bottom"></div>
+      </div>
+    </div>
+    <div class="share-story-bar">
+      <button id="shareStoryBtn" class="btn btn-primary btn-lg">Share to Instagram Story</button>
+    </div>
+  </div>
+
   <!-- Info modal -->
   <div class="info-overlay" id="infoOverlay" hidden>
     <div class="info-card">
@@ -599,6 +658,15 @@
   var ICON_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>';
   var ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
+  var LOGO_VB = { w:577, h:128 };
+  var LOGO_PATHS = [
+    { d:"M133.352 0.667219C159.011 5.48911 159.7 36.6591 143.685 81.4337C134.041 108.643 120.781 126.725 103.56 126.725C92.7105 126.725 87.1998 116.22 87.1998 101.755C87.1998 101.066 87.1998 100.205 87.1998 99.3436C87.7164 86.7722 92.1938 71.9622 100.632 58.5298H98.7378C89.7829 72.8232 85.3055 88.8387 85.3055 101.755C77.2116 118.459 65.8457 126.725 53.2744 126.725C43.2862 126.725 39.3254 117.942 38.8087 106.232C38.8087 105.715 38.8087 105.199 38.8087 104.682C38.6365 88.1499 45.0083 66.9681 51.2079 57.4965H49.3136C42.9418 67.3125 36.3978 89.5276 37.0866 106.232C29.165 119.664 19.349 126.725 11.2551 126.725C-9.06564 126.725 2.47243 85.3946 12.1162 61.974C21.9322 38.3812 36.57 10.8276 58.6129 10.8276C71.012 10.8276 78.417 20.988 78.7615 36.8313C74.1118 46.9917 70.8398 58.3576 69.4621 69.7234H71.3564C72.7341 58.3576 76.0061 46.9917 80.6558 36.8313C91.3328 13.4108 110.104 -3.63803 133.352 0.667219Z", fill:"#c41e24" },
+    { d:"M179.683 65.8098C179.683 70.8261 180.24 75.731 181.355 80.5244C182.581 85.2064 184.476 89.4424 187.04 93.2325C189.604 97.0227 192.948 100.088 197.073 102.429C201.197 104.659 206.214 105.773 212.122 105.773C218.03 105.773 223.046 104.659 227.171 102.429C231.296 100.088 234.64 97.0227 237.204 93.2325C239.768 89.4424 241.607 85.2064 242.722 80.5244C243.948 75.731 244.561 70.8261 244.561 65.8098C244.561 60.5704 243.948 55.4983 242.722 50.5934C241.607 45.6886 239.768 41.341 237.204 37.5509C234.64 33.6493 231.296 30.5837 227.171 28.3542C223.046 26.0133 218.03 24.8428 212.122 24.8428C206.214 24.8428 201.197 26.0133 197.073 28.3542C192.948 30.5837 189.604 33.6493 187.04 37.5509C184.476 41.341 182.581 45.6886 181.355 50.5934C180.24 55.4983 179.683 60.5704 179.683 65.8098ZM153.43 65.8098C153.43 56.8918 154.768 48.6426 157.444 41.0623C160.119 33.3706 163.965 26.6821 168.981 20.9969C173.998 15.3117 180.129 10.8527 187.374 7.61992C194.732 4.38715 202.981 2.77077 212.122 2.77077C221.374 2.77077 229.623 4.38715 236.869 7.61992C244.115 10.8527 250.246 15.3117 255.263 20.9969C260.279 26.6821 264.125 33.3706 266.8 41.0623C269.476 48.6426 270.813 56.8918 270.813 65.8098C270.813 74.5048 269.476 82.6424 266.8 90.2227C264.125 97.6915 260.279 104.213 255.263 109.787C250.246 115.36 244.115 119.764 236.869 122.996C229.623 126.118 221.374 127.678 212.122 127.678C202.981 127.678 194.732 126.118 187.374 122.996C180.129 119.764 173.998 115.36 168.981 109.787C163.965 104.213 160.119 97.6915 157.444 90.2227C154.768 82.6424 153.43 74.5048 153.43 65.8098Z", fill:"#000000" },
+    { d:"M299.962 59.6229H328.722C334.742 59.6229 339.257 58.2852 342.267 55.6098C345.276 52.9344 346.781 48.5869 346.781 42.5673C346.781 36.7706 345.276 32.5903 342.267 30.0263C339.257 27.351 334.742 26.0133 328.722 26.0133H299.962V59.6229ZM273.71 5.61337H338.086C343.437 5.61337 348.23 6.50517 352.466 8.28877C356.814 9.96089 360.493 12.3019 363.502 15.3117C366.624 18.3215 368.965 21.8329 370.525 25.846C372.198 29.7477 373.034 33.9837 373.034 38.5542C373.034 45.5771 371.529 51.6524 368.519 56.7803C365.62 61.9081 360.827 65.8097 354.139 68.4851V68.8196C357.371 69.7114 360.047 71.1048 362.165 72.9999C364.283 74.7835 366.011 76.9572 367.348 79.5211C368.686 81.9736 369.634 84.7047 370.191 87.7145C370.86 90.7244 371.306 93.7342 371.529 96.744C371.64 98.6391 371.752 100.869 371.863 103.432C371.975 105.996 372.142 108.616 372.365 111.291C372.699 113.967 373.145 116.531 373.702 118.983C374.371 121.324 375.319 123.331 376.545 125.003H350.293C348.844 121.213 347.952 116.698 347.617 111.459C347.283 106.219 346.781 101.203 346.112 96.4096C345.221 90.167 343.326 85.5965 340.427 82.6982C337.529 79.7998 332.791 78.3507 326.214 78.3507H299.962V125.003H273.71V5.61337Z", fill:"#000000" },
+    { d:"M405.586 61.7967H425.986C428.996 61.7967 431.894 61.5737 434.681 61.1278C437.468 60.6819 439.921 59.8458 442.039 58.6196C444.157 57.2819 445.829 55.4426 447.055 53.1016C448.393 50.7607 449.062 47.6951 449.062 43.905C449.062 40.1148 448.393 37.0493 447.055 34.7083C445.829 32.3673 444.157 30.5837 442.039 29.3575C439.921 28.0198 437.468 27.128 434.681 26.6821C431.894 26.2362 428.996 26.0133 425.986 26.0133H405.586V61.7967ZM379.334 5.61337H433.176C440.645 5.61337 446.999 6.72812 452.239 8.95762C457.478 11.0756 461.714 13.9182 464.947 17.4854C468.291 21.0526 470.688 25.1215 472.137 29.6919C473.697 34.2624 474.478 39.0001 474.478 43.905C474.478 48.6984 473.697 53.436 472.137 58.118C470.688 62.6885 468.291 66.7573 464.947 70.3245C461.714 73.8917 457.478 76.79 452.239 79.0195C446.999 81.1375 440.645 82.1965 433.176 82.1965H405.586V125.003H379.334V5.61337Z", fill:"#000000" },
+    { d:"M475.814 5.61337H502.066V51.4295H550.391V5.61337H576.643V125.003H550.391V73.5015H502.066V125.003H475.814V5.61337Z", fill:"#000000" }
+  ];
+
   /* ============================= state ============================= */
   var items = [];   // { id, kind:'image'|'pdfpage', fileName, naturalW, naturalH, rasterSource, previewUrl, detectedDpi, sourceDpi }
   var nextId = 1;
@@ -628,6 +696,7 @@
   var els = {};
   ["landingView","editorView","fileInputLanding","logoHomeBtn","infoBtn","infoOverlay","infoCloseBtn",
    "topbarActions","downloadBtn","pageOutline","contentArea","previewImg","pageCaption","mismatchBanner",
+   "landingActions","landingShareBtn","shareStoryOverlay","shareStoryCloseBtn","shareStoryBtn",
    "pagesStripItems","addMoreBtn","fileInputMore","pageNav","prevPageBtn","nextPageBtn","pageNavLabel",
    "infoFileName","infoPixels","infoDetectedDpi","sourceDpiInput",
    "orientationBtn","orientationLabel","presetSelect","unitSelect","widthInput","heightInput",
@@ -681,6 +750,7 @@
     els.landingView.hidden = view !== "landing";
     els.editorView.hidden = view !== "editor";
     els.topbarActions.hidden = view !== "editor";
+    els.landingActions.hidden = view !== "landing";
   }
 
   /* ============================= DPI detection ============================= */
@@ -1245,6 +1315,102 @@
   els.infoBtn.addEventListener("click", function(){ els.infoOverlay.hidden = false; });
   els.infoCloseBtn.addEventListener("click", function(){ els.infoOverlay.hidden = true; });
   els.infoOverlay.addEventListener("click", function(e){ if(e.target === els.infoOverlay) els.infoOverlay.hidden = true; });
+
+  /* ============================= share to story ============================= */
+  function drawLogoOnCanvas(ctx, x, y, w){
+    var scale = w / LOGO_VB.w;
+    var h = LOGO_VB.h * scale;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    LOGO_PATHS.forEach(function(p){
+      ctx.fillStyle = p.fill;
+      ctx.fill(new Path2D(p.d));
+    });
+    ctx.restore();
+    return h;
+  }
+  function wrapCenteredText(ctx, text, cx, y, maxWidth, lineHeight){
+    var words = text.split(" ");
+    var line = "", lines = [];
+    words.forEach(function(word){
+      var test = line ? line + " " + word : word;
+      if(ctx.measureText(test).width > maxWidth && line){ lines.push(line); line = word; }
+      else { line = test; }
+    });
+    if(line) lines.push(line);
+    lines.forEach(function(l, i){ ctx.fillText(l, cx, y + i*lineHeight); });
+    return lines.length * lineHeight;
+  }
+  function buildShareStoryCanvas(){
+    var W = 1080, H = 1920;
+    var canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, W, H);
+
+    var logoW = W * 0.5;
+    var logoX = (W - logoW) / 2;
+    var logoY = H * 0.40;
+    var logoH = drawLogoOnCanvas(ctx, logoX, logoY, logoW);
+
+    ctx.textAlign = "center";
+    var linkY = logoY + logoH + 64;
+    var linkText = "ahfos.github.io/morph";
+    ctx.fillStyle = "#c41e24";
+    ctx.font = "700 32px 'Helvetica Neue', Helvetica, Arial, sans-serif";
+    ctx.fillText(linkText, W/2, linkY);
+    var linkWidth = ctx.measureText(linkText).width;
+    ctx.fillRect(W/2 - linkWidth/2, linkY + 10, linkWidth, 3);
+
+    ctx.fillStyle = "#888888";
+    ctx.font = "500 26px 'Helvetica Neue', Helvetica, Arial, sans-serif";
+    wrapCenteredText(ctx, "Print-ready file conversion, right in your browser.", W/2, linkY + 66, W*0.68, 36);
+
+    return canvas;
+  }
+
+  function openShareStory(){ els.shareStoryOverlay.hidden = false; }
+  function closeShareStory(){ els.shareStoryOverlay.hidden = true; }
+  els.landingShareBtn.addEventListener("click", openShareStory);
+  els.shareStoryCloseBtn.addEventListener("click", closeShareStory);
+
+  async function shareStory(){
+    if(els.shareStoryBtn.disabled) return;
+    els.shareStoryBtn.disabled = true;
+    showExportProgress("Preparing…");
+    try {
+      setExportProgress(0.3, "Building image…");
+      var canvas = buildShareStoryCanvas();
+      setExportProgress(0.6, "Encoding…");
+      var blob = await new Promise(function(resolve){ canvas.toBlob(resolve, "image/png"); });
+      if(!blob) throw new Error("Couldn't build the share image.");
+      setExportProgress(0.85, "Sharing…");
+      var file = new File([blob], "morph-share.png", { type:"image/png" });
+      var shared = false, cancelled = false;
+      if(navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
+        try {
+          await navigator.share({ files:[file], title:"Morph", text:"Print-ready file conversion — ahfos.github.io/morph" });
+          shared = true;
+        } catch(shareErr){
+          if(shareErr && shareErr.name === "AbortError"){ cancelled = true; }
+        }
+      }
+      if(!shared && !cancelled){
+        downloadBlob(blob, "morph-share.png");
+        showToast("Saved — share it to your story from your camera roll.");
+      }
+      setExportProgress(1, "Done");
+    } catch(err){
+      console.error(err);
+      showToast(err && err.message ? err.message : "Couldn't build the share image.");
+    } finally {
+      els.shareStoryBtn.disabled = false;
+      hideExportProgress();
+    }
+  }
+  els.shareStoryBtn.addEventListener("click", shareStory);
 
   /* ============================= export overlay ============================= */
   els.downloadBtn.addEventListener("click", function(){
