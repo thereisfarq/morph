@@ -1448,6 +1448,9 @@
   /* ============================= export overlay ============================= */
   els.downloadBtn.addEventListener("click", function(){
     els.exportOverlay.hidden = false;
+    // .export-body has zero size while hidden, so the outline box couldn't be sized
+    // correctly during the last render(); resize it now that the overlay is visible.
+    layoutPreviewBoxes(state.pageWidth, state.pageHeight);
   });
   els.closeExportBtn.addEventListener("click", function(){ els.exportOverlay.hidden = true; });
 
