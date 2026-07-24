@@ -2032,5 +2032,30 @@
   showView("landing");
 })();
 </script>
+
+<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="ahfos" data-description="Support me on Buy me a coffee!" data-message="I'm glad you found this tool helpful!" data-color="#B00000" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+<script>
+(function(){
+  function isLanding(){
+    var el = document.getElementById('landingView');
+    return el ? !el.hidden : true;
+  }
+  function bmcEls(){
+    return Array.prototype.slice.call(document.querySelectorAll('[id^="bmc-wbtn"], [id^="bmc-widget"], [class*="bmc-"]'));
+  }
+  function apply(){
+    var els = bmcEls();
+    if(!els.length) return;
+    var show = isLanding();
+    els.forEach(function(el){ el.style.display = show ? '' : 'none'; });
+  }
+  var mo = new MutationObserver(apply);
+  mo.observe(document.documentElement, {childList:true, subtree:true});
+  setInterval(apply, 500);
+  window.addEventListener('popstate', apply);
+  window.addEventListener('hashchange', apply);
+  apply();
+})();
+</script>
 </body>
 </html>
