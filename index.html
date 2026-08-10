@@ -376,7 +376,7 @@
           <path d="M475.814 5.61337H502.066V51.4295H550.391V5.61337H576.643V125.003H550.391V73.5015H502.066V125.003H475.814V5.61337Z" fill="black"/>
         </svg>
       </div>
-      <p class="landing-tagline">Turn images or PDFs into a print-ready file. Add one file or several — Morph compiles them into a single flattened PDF/X-1a, CMYK TIFF, or high-res PNG set, one page per source. Nothing you upload ever leaves your browser.</p>
+      <p class="landing-tagline">Turn images or PDFs into a print-ready file. Add one file or several — Morph compiles them into a single flattened PDF, TIFF, or high-res PNG set, one page per source, in RGB, standard CMYK, or matched to your source's own color — with nothing recompressed or downsampled along the way. Nothing you upload ever leaves your browser.</p>
       <label class="btn btn-primary btn-lg" for="fileInputLanding" style="cursor:pointer;">Convert Files</label>
       <input type="file" id="fileInputLanding" accept="image/png,image/jpeg,image/webp,application/pdf" multiple hidden>
       <p class="landing-note">PNG, JPEG, WebP, or PDF in (every PDF page becomes its own page) — press-ready PDF, TIFF, or PNG out. Processing happens entirely on this device.</p>
@@ -497,12 +497,11 @@
         </div>
 
         <div class="ctrl-section">
-          <div class="ctrl-section-head">
-            <span class="eyebrow">Color</span>
-            <div class="toggle-row" style="gap:0.5rem;">
-              <span style="font-size:0.72rem; color:var(--muted); font-weight:600;">CMYK</span>
-              <button class="switch" id="cmykSwitch" type="button" aria-label="Toggle CMYK"></button>
-            </div>
+          <div class="ctrl-section-head"><span class="eyebrow">Color</span></div>
+          <div class="segmented" id="colorModeSegmented" style="margin-bottom:0.7rem;">
+            <button data-mode="match" type="button">Match Source</button>
+            <button data-mode="rgb" type="button">RGB</button>
+            <button data-mode="cmyk" type="button">CMYK</button>
           </div>
           <div class="field-row" id="profileRow">
             <div class="field">
@@ -598,13 +597,17 @@
       </button>
       <span class="eyebrow">About</span>
       <h2>Morph</h2>
-      <p>Morph converts images and PDFs into a print-ready file. Add one file or several — every PDF page and every image becomes its own page — pick a page size and unit, choose whether each page fits within the page or fills it, set independent padding, dial in DPI, and optionally convert to CMYK for press output. Multiple sources compile into a single output file, one page per source.</p>
+      <p>Morph converts images and PDFs into a print-ready file. Add one file or several — every PDF page and every image becomes its own page — pick a page size and unit, choose whether each page fits within the page or fills it, set independent padding, dial in DPI (300 by default, the standard for press-quality output), and choose a color mode. Multiple sources compile into a single output file, one page per source.</p>
       <h3>PDF input</h3>
       <p>Uploaded PDFs are rasterized page-by-page in your browser (via pdf.js) at a print-appropriate resolution, then treated exactly like an image for layout and export. Vector content, live text, and layers are flattened in the process — this matches how the final press-ready output works either way.</p>
-      <h3>Color accuracy</h3>
-      <p>Browsers have no built-in color-management engine, so CMYK conversion here is a documented <strong>device approximation</strong> (proper black generation, not a naive channel inversion) — not a true ICC-managed transform. Named output profiles (SWOP v2, FOGRA39) tag the export with the correct industry-standard identifier but are not embedded as binaries unless you upload your own ICC file, which is embedded verbatim.</p>
+      <h3>Color modes</h3>
+      <p><strong>Match Source</strong> (default) makes no color conversion at all: if the uploaded PNG or JPEG has an embedded ICC profile, that exact profile is carried through and embedded directly in the exported file's image data; if none is found, the export is tagged sRGB, which is what your browser used to decode the pixels. This is the mode to use if you don't want Morph to touch your color in any way.</p>
+      <p><strong>RGB</strong> exports DeviceRGB pixel data with your chosen output profile (sRGB, Adobe RGB, or your own uploaded ICC file) embedded directly on the image, so Illustrator, CorelDRAW, Acrobat, and other ICC-aware apps display it exactly as tagged instead of reinterpreting it through their own default working space — which is what caused unexpected color shifts before.</p>
+      <p><strong>CMYK</strong> converts for press output. Browsers have no built-in color-management engine, so this conversion is a documented <strong>device approximation</strong> (proper black generation, not a naive channel inversion) — not a true ICC-managed transform. Named output profiles (SWOP v2, FOGRA39) tag the export with the correct industry-standard identifier but are only embedded as real ICC binaries if you upload your own ICC file — in which case it's embedded verbatim on the image, not just referenced.</p>
+      <h3>Quality &amp; compression</h3>
+      <p>Pixel data in PDF and TIFF exports is always stored with lossless Flate (zip) compression — never JPEG — so there is no generational quality loss from compression at any DPI or color mode. The only unavoidable resampling happens when a source image must be scaled to fit your chosen page size and DPI.</p>
       <h3>PDF/X-1a</h3>
-      <p>PDF exports are hand-written to be structurally compliant with PDF/X-1a — CMYK-only color, embedded OutputIntent, no transparency. This is best-effort compliance; it is not run through a certified preflight validator.</p>
+      <p>When CMYK is selected, PDF exports are hand-written to be structurally compliant with PDF/X-1a — CMYK-only color, embedded OutputIntent, no transparency. This is best-effort compliance; it is not run through a certified preflight validator. RGB and Match Source exports are standard, widely compatible PDFs (not PDF/X, since PDF/X-1a requires CMYK) built with the same plain cross-reference table structure for maximum compatibility with Illustrator, CorelDRAW, and other PDF readers.</p>
       <h3>Privacy</h3>
       <p>Every conversion happens in your browser. Nothing you upload is sent anywhere.</p>
     </div>
@@ -675,7 +678,7 @@
     fitMode:"contain",
     padLinked:true, padTop:0, padRight:0, padBottom:0, padLeft:0,
     dpi:300,
-    cmyk:false,
+    colorMode:"match", // 'match' | 'rgb' | 'cmyk'
     rgbProfile:"srgb", cmykProfile:"swop2",
     customIccBytes:null, customIccName:"",
     blackMode:"plain"
@@ -699,7 +702,7 @@
    "infoFileName","infoPixels","infoDetectedDpi","sourceDpiInput",
    "orientationBtn","orientationLabel","presetSelect","unitSelect","widthInput","heightInput",
    "fitSegmented","fitHint","padLinkBtn","padTop","padRight","padBottom","padLeft",
-   "dpiSlider","dpiValue","dpiHint","cmykSwitch","profileRow","profileSelect","customIccRow","customIccInput",
+   "dpiSlider","dpiValue","dpiHint","colorModeSegmented","profileRow","profileSelect","customIccRow","customIccInput",
    "blackModeRow","blackModeSelect","colorHint",
    "exportOverlay","closeExportBtn","exportPageOutline","exportContentArea","exportPreviewImg","exportNote",
    "exportPdfBtn",
@@ -830,6 +833,92 @@
     return null;
   }
 
+  /* ============================= embedded ICC extraction (for "Match Source") ============================= */
+  async function inflateZlib(bytes){
+    if(typeof DecompressionStream !== "function") return null;
+    try {
+      var ds = new DecompressionStream("deflate");
+      var writer = ds.writable.getWriter();
+      writer.write(bytes);
+      writer.close();
+      var out = await new Response(ds.readable).arrayBuffer();
+      return new Uint8Array(out);
+    } catch(e){ return null; }
+  }
+  async function extractPngICC(buf){
+    try {
+      var view = new DataView(buf);
+      var offset = 8;
+      while(offset + 8 <= view.byteLength){
+        var len = view.getUint32(offset);
+        var type = String.fromCharCode(view.getUint8(offset+4), view.getUint8(offset+5), view.getUint8(offset+6), view.getUint8(offset+7));
+        if(type === "iCCP"){
+          var chunkStart = offset + 8;
+          var nameEnd = chunkStart;
+          while(nameEnd < chunkStart+len && view.getUint8(nameEnd) !== 0) nameEnd++;
+          var compMethod = view.getUint8(nameEnd+1);
+          var compStart = nameEnd+2;
+          var compLen = (chunkStart+len) - compStart;
+          if(compMethod !== 0 || compLen <= 0) return null;
+          var compBytes = new Uint8Array(buf, compStart, compLen);
+          return await inflateZlib(compBytes);
+        }
+        if(type === "IDAT") return null;
+        offset += 8 + len + 4;
+      }
+    } catch(e){ /* ignore, fall through */ }
+    return null;
+  }
+  async function extractJpegICC(buf){
+    try {
+      var view = new DataView(buf);
+      if(view.getUint16(0) !== 0xFFD8) return null;
+      var offset = 2;
+      var chunks = [];
+      while(offset + 4 <= view.byteLength){
+        var marker = view.getUint16(offset);
+        if((marker & 0xFF00) !== 0xFF00) break;
+        var segLen = view.getUint16(offset+2);
+        if(marker === 0xFFE2 && segLen >= 16){
+          var idBytes = [];
+          for(var i=0;i<12;i++) idBytes.push(view.getUint8(offset+4+i));
+          var idStr = String.fromCharCode.apply(null, idBytes);
+          if(idStr === "ICC_PROFILE\0"){
+            var seq = view.getUint8(offset+4+12);
+            var total = view.getUint8(offset+4+13);
+            var dataStart = offset+4+14;
+            var dataLen = segLen - 2 - 14;
+            if(dataLen > 0){
+              chunks.push({ seq:seq, total:total, bytes:new Uint8Array(buf, dataStart, dataLen) });
+            }
+          }
+        }
+        if(marker === 0xFFDA) break;
+        offset += 2 + segLen;
+      }
+      if(!chunks.length) return null;
+      chunks.sort(function(a,b){ return a.seq - b.seq; });
+      var totalLen = 0; chunks.forEach(function(c){ totalLen += c.bytes.length; });
+      var out = new Uint8Array(totalLen); var o = 0;
+      chunks.forEach(function(c){ out.set(c.bytes, o); o += c.bytes.length; });
+      return out;
+    } catch(e){ /* ignore, fall through */ }
+    return null;
+  }
+  function iccColorSpaceSig(bytes){
+    if(!bytes || bytes.length < 20) return null;
+    return String.fromCharCode(bytes[16], bytes[17], bytes[18], bytes[19]);
+  }
+  async function extractSourceICC(buf, mimeType){
+    var bytes = null;
+    if(mimeType === "image/png") bytes = await extractPngICC(buf);
+    else if(mimeType === "image/jpeg") bytes = await extractJpegICC(buf);
+    if(!bytes || !bytes.length) return null;
+    var sig = iccColorSpaceSig(bytes);
+    if(sig !== "RGB ") return null; // only RGB source profiles are usable — our raster pipeline always produces RGB pixels
+    return { bytes: bytes, colorSpace: sig };
+  }
+
   /* ============================= pdf.js loader ============================= */
   var _pdfJsLoading = null;
   function loadScript(src){
@@ -871,13 +960,16 @@
         var img = new Image();
         img.onload = function(){
           var detected = detectDpiFromBuffer(buf, file.type);
-          items.push({
-            id: nextId++, kind:"image", fileName:file.name,
-            naturalW: img.naturalWidth, naturalH: img.naturalHeight,
-            rasterSource: img, previewUrl: url,
-            detectedDpi: detected, sourceDpi: detected || 72
+          extractSourceICC(buf, file.type).then(function(sourceIcc){
+            items.push({
+              id: nextId++, kind:"image", fileName:file.name,
+              naturalW: img.naturalWidth, naturalH: img.naturalHeight,
+              rasterSource: img, previewUrl: url,
+              detectedDpi: detected, sourceDpi: detected || 72,
+              sourceIcc: sourceIcc
+            });
+            resolve();
           });
-          resolve();
         };
         img.onerror = function(){ reject(new Error("Couldn't read " + file.name + ".")); };
         img.src = url;
@@ -909,7 +1001,7 @@
         id: nextId++, kind:"pdfpage", fileName: label,
         naturalW: canvas.width, naturalH: canvas.height,
         rasterSource: canvas, previewUrl: canvas.toDataURL("image/png"),
-        detectedDpi: null, sourceDpi: 72
+        detectedDpi: null, sourceDpi: 72, sourceIcc: null
       });
     }
     if(onProgress) onProgress(1, "Done");
@@ -1049,9 +1141,9 @@
 
   /* ============================= profile selects ============================= */
   function populateProfiles(){
-    var list = state.cmyk ? CMYK_PROFILES : RGB_PROFILES;
+    var list = state.colorMode === "cmyk" ? CMYK_PROFILES : RGB_PROFILES;
     els.profileSelect.innerHTML = list.map(function(p){ return '<option value="'+p.value+'">'+p.label+'</option>'; }).join("");
-    els.profileSelect.value = state.cmyk ? state.cmykProfile : state.rgbProfile;
+    els.profileSelect.value = state.colorMode === "cmyk" ? state.cmykProfile : state.rgbProfile;
   }
 
   /* ============================= sync UI <-> state ============================= */
@@ -1076,11 +1168,15 @@
     els.padLinkBtn.classList.toggle("active", state.padLinked);
     els.dpiSlider.value = state.dpi;
     els.dpiValue.textContent = state.dpi + " DPI";
-    els.cmykSwitch.classList.toggle("on", state.cmyk);
+    Array.prototype.forEach.call(els.colorModeSegmented.querySelectorAll("button"), function(b){
+      b.classList.toggle("active", b.dataset.mode === state.colorMode);
+    });
+    els.profileRow.hidden = state.colorMode === "match";
     populateProfiles();
-    els.customIccRow.hidden = els.profileSelect.value !== "custom";
-    els.blackModeRow.hidden = !state.cmyk;
+    els.customIccRow.hidden = state.colorMode === "match" || els.profileSelect.value !== "custom";
+    els.blackModeRow.hidden = state.colorMode !== "cmyk";
     els.blackModeSelect.value = state.blackMode;
+    updateColorHint();
     Array.prototype.forEach.call(els.fitSegmented.querySelectorAll("button"), function(b){
       b.classList.toggle("active", b.dataset.fit === state.fitMode);
     });
@@ -1227,11 +1323,15 @@
   }
 
   function updateColorHint(){
-    if(!state.cmyk){
-      els.colorHint.textContent = "RGB export. PNG is always RGB regardless of this setting.";
+    if(state.colorMode === "match"){
+      els.colorHint.textContent = "No color conversion. Uses each source file's own embedded ICC profile if it has one, otherwise tags the export sRGB. Applies to PDF and TIFF; PNG stays RGB.";
       return;
     }
-    els.colorHint.textContent = "CMYK is a device approximation (no ICC-managed transform) — see the info panel for details. Applies to PDF and TIFF only; PNG stays RGB.";
+    if(state.colorMode === "rgb"){
+      els.colorHint.textContent = "RGB export with the selected profile embedded directly on the image, so apps render it exactly as tagged. Applies to PDF and TIFF; PNG stays RGB.";
+      return;
+    }
+    els.colorHint.textContent = "CMYK is a device approximation (no ICC-managed transform unless you upload a custom ICC profile) — see the info panel for details. Applies to PDF and TIFF only; PNG stays RGB.";
   }
 
   function canvasTooLarge(wpx, hpx){
@@ -1317,14 +1417,21 @@
     render();
   });
 
-  els.cmykSwitch.addEventListener("click", function(){
-    state.cmyk = !state.cmyk;
+  els.colorModeSegmented.addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest("button[data-mode]") : null;
+    if(!btn){
+      var t = e.target;
+      while(t && t !== els.colorModeSegmented && !(t.dataset && t.dataset.mode)) t = t.parentNode;
+      btn = (t && t.dataset && t.dataset.mode) ? t : null;
+    }
+    if(!btn) return;
+    state.colorMode = btn.dataset.mode;
     syncControlsFromState();
     render();
   });
   els.profileSelect.addEventListener("change", function(){
-    if(state.cmyk) state.cmykProfile = this.value; else state.rgbProfile = this.value;
-    els.customIccRow.hidden = this.value !== "custom";
+    if(state.colorMode === "cmyk") state.cmykProfile = this.value; else state.rgbProfile = this.value;
+    els.customIccRow.hidden = state.colorMode === "match" || this.value !== "custom";
     render();
   });
   els.customIccInput.addEventListener("change", function(){
@@ -1594,15 +1701,15 @@
     throw new Error("This browser can't compress data for export. Try a recent Chrome, Edge, or Safari.");
   }
 
-  /* ============================= sRGB ICC profile builder ============================= */
-  function buildSRGBICC(){
+  /* ============================= RGB matrix ICC profile builder ============================= */
+  function buildRGBMatrixICC(desc, r, g, b, gamma){
     function s15Fixed16(v){
-      var b = new ArrayBuffer(4); var dv = new DataView(b);
+      var buf = new ArrayBuffer(4); var dv = new DataView(buf);
       dv.setInt32(0, Math.round(v*65536));
-      return new Uint8Array(b);
+      return new Uint8Array(buf);
     }
-    function u32be(v){ var b=new ArrayBuffer(4); new DataView(b).setUint32(0,v); return new Uint8Array(b); }
-    function u16be(v){ var b=new ArrayBuffer(2); new DataView(b).setUint16(0,v); return new Uint8Array(b); }
+    function u32be(v){ var buf=new ArrayBuffer(4); new DataView(buf).setUint32(0,v); return new Uint8Array(buf); }
+    function u16be(v){ var buf=new ArrayBuffer(2); new DataView(buf).setUint16(0,v); return new Uint8Array(buf); }
     function sig(s){ var out=new Uint8Array(4); for(var i=0;i<4;i++) out[i]=s.charCodeAt(i)||0x20; return out; }
     function concat(arrs){
       var len=0; arrs.forEach(function(a){ len+=a.length; });
@@ -1611,9 +1718,9 @@
       return out;
     }
     function xyzType(x,y,z){ return concat([sig("XYZ "), u32be(0), s15Fixed16(x), s15Fixed16(y), s15Fixed16(z)]); }
-    function curvType(gamma){
-      var g = Math.round(gamma*256);
-      return concat([sig("curv"), u32be(0), u32be(1), u16be(g)]);
+    function curvType(gm){
+      var g2 = Math.round(gm*256);
+      return concat([sig("curv"), u32be(0), u32be(1), u16be(g2)]);
     }
     function textType(str){
       var strBytes = new TextEncoder().encode(str+"\0");
@@ -1631,15 +1738,15 @@
     }
 
     var tags = [
-      ["desc", descType("sRGB IEC61966-2.1 (Morph approximation)")],
+      ["desc", descType(desc)],
       ["cprt", textType("Public Domain / generated at runtime")],
       ["wtpt", xyzType(0.9642, 1.0, 0.8249)],
-      ["rXYZ", xyzType(0.4361, 0.2225, 0.0139)],
-      ["gXYZ", xyzType(0.3851, 0.7169, 0.0971)],
-      ["bXYZ", xyzType(0.1431, 0.0606, 0.7139)],
-      ["rTRC", curvType(2.2)],
-      ["gTRC", curvType(2.2)],
-      ["bTRC", curvType(2.2)]
+      ["rXYZ", xyzType(r[0], r[1], r[2])],
+      ["gXYZ", xyzType(g[0], g[1], g[2])],
+      ["bXYZ", xyzType(b[0], b[1], b[2])],
+      ["rTRC", curvType(gamma)],
+      ["gTRC", curvType(gamma)],
+      ["bTRC", curvType(gamma)]
     ].map(function(t){ return [t[0], pad4(t[1])]; });
 
     var headerSize = 128;
@@ -1688,8 +1795,18 @@
     }
     return full;
   }
+  function buildSRGBICC(){
+    return buildRGBMatrixICC("sRGB IEC61966-2.1 (Morph approximation)",
+      [0.4361,0.2225,0.0139], [0.3851,0.7169,0.0971], [0.1431,0.0606,0.7139], 2.2);
+  }
+  function buildAdobeRGBICC(){
+    return buildRGBMatrixICC("Adobe RGB (1998) (Morph approximation)",
+      [0.6097559,0.3111242,0.0194811], [0.2052401,0.6256560,0.0608902], [0.1492240,0.0632197,0.7448387], 2.19921875);
+  }
   var _srgbIccCache = null;
   function getSRGBICC(){ if(!_srgbIccCache) _srgbIccCache = buildSRGBICC(); return _srgbIccCache; }
+  var _adobeRgbIccCache = null;
+  function getAdobeRGBICC(){ if(!_adobeRgbIccCache) _adobeRgbIccCache = buildAdobeRGBICC(); return _adobeRgbIccCache; }
 
   /* ============================= zip writer (STORED entries) ============================= */
   var CRC_TABLE = (function(){
@@ -1741,7 +1858,7 @@
     return zconcat(localParts.concat([centralBytes, eocd]));
   }
 
-  /* ============================= PDF/X-1a writer (multi-page) ============================= */
+  /* ============================= PDF writer (multi-page, RGB/CMYK/Match Source) ============================= */
   function pdfEscape(str){ return str.replace(/([()\\])/g, "\\$1"); }
 
   function PDFWriter(){
@@ -1761,7 +1878,19 @@
   PDFWriter.prototype.endObj = function(){ this.push("endobj\n"); };
   PDFWriter.prototype.toBlob = function(){ return new Blob(this.chunks, { type:"application/pdf" }); };
 
-  async function buildPDFX1A(onProgress){
+  function pdfDate(){
+    var d = new Date();
+    function p(n){ return String(n).padStart(2,"0"); }
+    return "D:" + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+  }
+
+  // Builds a print PDF honoring state.colorMode ('cmyk' | 'rgb' | 'match').
+  // CMYK mode is written PDF/X-1a compliant (CMYK-only, OutputIntent, no transparency).
+  // RGB and Match Source modes write a standard, widely-compatible PDF with the color
+  // profile embedded directly on every image (ICCBased), so apps like Illustrator and
+  // CorelDRAW render the color exactly as tagged instead of reinterpreting it. Pixel
+  // data is always Flate-compressed (lossless) — never re-encoded as JPEG.
+  async function buildPDF(onProgress){
     var dims = computeExportPixelSize();
     if(canvasTooLarge(dims.pageWpx, dims.pageHpx)){
       throw new Error("This page size at " + state.dpi + " DPI is too large to render. Lower the DPI or choose a smaller page.");
@@ -1769,62 +1898,113 @@
     var pageWpt = convert(dims.pageWpx, "px", "pt", state.dpi);
     var pageHpt = convert(dims.pageHpx, "px", "pt", state.dpi);
     var N = items.length;
+    var mode = state.colorMode; // 'rgb' | 'cmyk' | 'match'
+    var isX1A = (mode === "cmyk");
 
-    var useCustom = state.cmykProfile === "custom" && state.customIccBytes;
+    var sharedRgbIccBytes = state.rgbProfile === "custom" && state.customIccBytes ? state.customIccBytes
+      : state.rgbProfile === "adobergb" ? getAdobeRGBICC()
+      : getSRGBICC();
+
+    var cmykCustomIcc = (mode === "cmyk" && state.cmykProfile === "custom" && state.customIccBytes) ? state.customIccBytes : null;
     var profileMeta = CMYK_PROFILES.filter(function(p){ return p.value === state.cmykProfile; })[0] || CMYK_PROFILES[2];
-    var iccCompressed = useCustom ? await deflate(state.customIccBytes) : null;
-    var hasIcc = !!iccCompressed;
 
-    var baseObj = 3 + (hasIcc ? 1 : 0); // 1=catalog 2=pages 3=outputintent [4=icc]
-    var kidsRefs = [];
-    for(var k=0;k<N;k++){ kidsRefs.push((baseObj+k*3+1) + " 0 R"); }
+    // De-duplicate ICC byte buffers into shared PDF objects (same profile referenced by reference).
+    var iccRecords = [];
+    function iccRecordFor(bytes, channels){
+      if(!bytes) return null;
+      for(var i=0;i<iccRecords.length;i++){ if(iccRecords[i].bytes === bytes) return iccRecords[i]; }
+      var rec = { bytes:bytes, num:null, compressed:null, channels:channels };
+      iccRecords.push(rec);
+      return rec;
+    }
+    var outputIntentIccRec = cmykCustomIcc ? iccRecordFor(cmykCustomIcc, 4) : null;
+
+    var pagePlans = [];
+    for(var pIdx=0; pIdx<N; pIdx++){
+      if(mode === "cmyk"){
+        pagePlans.push({ channels:4, colorSpace:"DeviceCMYK", iccRec:outputIntentIccRec });
+      } else if(mode === "rgb"){
+        pagePlans.push({ channels:3, colorSpace:"DeviceRGB", iccRec:iccRecordFor(sharedRgbIccBytes, 3) });
+      } else {
+        var srcItem = items[pIdx];
+        var bytes = (srcItem.sourceIcc && srcItem.sourceIcc.bytes) ? srcItem.sourceIcc.bytes : sharedRgbIccBytes;
+        pagePlans.push({ channels:3, colorSpace:"DeviceRGB", iccRec:iccRecordFor(bytes, 3) });
+      }
+    }
+
+    for(var iR=0; iR<iccRecords.length; iR++){
+      iccRecords[iR].compressed = await deflate(iccRecords[iR].bytes);
+    }
+
+    // Object numbering: 1=Catalog, 2=Pages, [3=OutputIntent if X1A], then ICC streams, then page/image/content triples.
+    var nextObjNum = 3;
+    var outputIntentObjNum = null;
+    if(isX1A){ outputIntentObjNum = nextObjNum; nextObjNum++; }
+    iccRecords.forEach(function(rec){ rec.num = nextObjNum; nextObjNum++; });
+    var pageTripleBase = nextObjNum;
 
     var w1 = new PDFWriter();
-    w1.push("%PDF-1.3\n%\xE2\xE3\xCF\xD3\n");
+    w1.push("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
 
     w1.beginObj(1);
-    w1.push("<< /Type /Catalog /Pages 2 0 R /OutputIntents [3 0 R] >>\n");
+    if(isX1A){
+      w1.push("<< /Type /Catalog /Pages 2 0 R /OutputIntents [" + outputIntentObjNum + " 0 R] >>\n");
+    } else {
+      w1.push("<< /Type /Catalog /Pages 2 0 R >>\n");
+    }
     w1.endObj();
 
+    var kidsRefs = [];
+    for(var k=0;k<N;k++){ kidsRefs.push((pageTripleBase + k*3) + " 0 R"); }
     w1.beginObj(2);
     w1.push("<< /Type /Pages /Kids [" + kidsRefs.join(" ") + "] /Count " + N + " >>\n");
     w1.endObj();
 
-    w1.beginObj(3);
-    var oi = "<< /Type /OutputIntent /S /GTS_PDFX /OutputConditionIdentifier (" + pdfEscape(profileMeta.cond) +
-      ") /OutputCondition (" + pdfEscape(profileMeta.desc) + ") /RegistryName (http://www.color.org)";
-    if(hasIcc) oi += " /DestOutputProfile 4 0 R";
-    oi += " /Info (" + pdfEscape(profileMeta.desc) + ") >>\n";
-    w1.push(oi);
-    w1.endObj();
+    if(isX1A){
+      w1.beginObj(outputIntentObjNum);
+      var oi = "<< /Type /OutputIntent /S /GTS_PDFX /OutputConditionIdentifier (" + pdfEscape(profileMeta.cond) +
+        ") /OutputCondition (" + pdfEscape(profileMeta.desc) + ") /RegistryName (http://www.color.org)";
+      if(outputIntentIccRec) oi += " /DestOutputProfile " + outputIntentIccRec.num + " 0 R";
+      oi += " /Info (" + pdfEscape(profileMeta.desc) + ") >>\n";
+      w1.push(oi);
+      w1.endObj();
+    }
 
-    if(hasIcc){
-      w1.beginObj(4);
-      w1.push("<< /N 4 /Alternate /DeviceCMYK /Filter /FlateDecode /Length " + iccCompressed.length + " >>\nstream\n");
-      w1.push(iccCompressed);
+    for(var iw=0; iw<iccRecords.length; iw++){
+      var rec2 = iccRecords[iw];
+      w1.beginObj(rec2.num);
+      w1.push("<< /N " + rec2.channels + " /Alternate /" + (rec2.channels===4?"DeviceCMYK":"DeviceRGB") +
+        " /Filter /FlateDecode /Length " + rec2.compressed.length + " >>\nstream\n");
+      w1.push(rec2.compressed);
       w1.push("\nendstream\n");
       w1.endObj();
     }
 
     for(var idx=0; idx<N; idx++){
       var item = items[idx];
-      var pageObjNum = baseObj+idx*3+1, imageObjNum = baseObj+idx*3+2, contentObjNum = baseObj+idx*3+3;
+      var plan = pagePlans[idx];
+      var pageObjNum = pageTripleBase + idx*3, imageObjNum = pageObjNum+1, contentObjNum = pageObjNum+2;
       var localStart = idx/N, localSpan = 1/N;
       if(onProgress) onProgress(0.03 + 0.9*localStart, "Page " + (idx+1) + " of " + N + "…");
       var built = await compositeItemToCanvas(item, dims.pageWpx, dims.pageHpx);
-      var cmykPacked = await canvasToCmykBuffer(built.canvas, onProgress, 0.03 + 0.9*(localStart+localSpan*0.05), 0.03 + 0.9*(localStart+localSpan*0.75));
-      var compressed = await deflate(cmykPacked);
+      var pixelBuf;
+      if(plan.channels === 4){
+        pixelBuf = await canvasToCmykBuffer(built.canvas, onProgress, 0.03 + 0.9*(localStart+localSpan*0.05), 0.03 + 0.9*(localStart+localSpan*0.75));
+      } else {
+        pixelBuf = rgbBufferFromCanvas(built.canvas);
+      }
+      var compressed = await deflate(pixelBuf);
 
       w1.beginObj(pageObjNum);
       w1.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + pageWpt.toFixed(2) + " " + pageHpt.toFixed(2) +
         "] /TrimBox [0 0 " + pageWpt.toFixed(2) + " " + pageHpt.toFixed(2) +
-        "] /Resources << /XObject << /Im0 " + imageObjNum + " 0 R >> >> /Contents " + contentObjNum +
-        " 0 R /Group << /Type /Group /S /Transparency /CS /DeviceCMYK /I false /K false >> >>\n");
+        "] /Resources << /ProcSet [/PDF /ImageC] /XObject << /Im0 " + imageObjNum + " 0 R >> >> /Contents " + contentObjNum + " 0 R >>\n");
       w1.endObj();
 
+      var csEntry = plan.iccRec ? ("[/ICCBased " + plan.iccRec.num + " 0 R]") : ("/" + plan.colorSpace);
       w1.beginObj(imageObjNum);
       w1.push("<< /Type /XObject /Subtype /Image /Width " + dims.pageWpx + " /Height " + dims.pageHpx +
-        " /BitsPerComponent 8 /ColorSpace /DeviceCMYK /Filter /FlateDecode /Length " + compressed.length + " >>\nstream\n");
+        " /BitsPerComponent 8 /ColorSpace " + csEntry + " /Filter /FlateDecode /Length " + compressed.length + " >>\nstream\n");
       w1.push(compressed);
       w1.push("\nendstream\n");
       w1.endObj();
@@ -1838,9 +2018,12 @@
       w1.endObj();
     }
 
-    var infoObjNum = baseObj + N*3 + 1;
+    var infoObjNum = pageTripleBase + N*3;
     w1.beginObj(infoObjNum);
-    w1.push("<< /Title (" + pdfEscape(baseFileName()) + ") /GTS_PDFXVersion (PDF/X-1a:2001) /GTS_PDFXConformance (PDF/X-1a:2001) /Trapped /False /Producer (Morph) >>\n");
+    var infoDict = "<< /Title (" + pdfEscape(baseFileName()) + ") /Producer (Morph) /CreationDate (" + pdfDate() + ")";
+    if(isX1A){ infoDict += " /GTS_PDFXVersion (PDF/X-1a:2001) /GTS_PDFXConformance (PDF/X-1a:2001) /Trapped /False"; }
+    infoDict += " >>\n";
+    w1.push(infoDict);
     w1.endObj();
 
     var xrefStart = w1.offset;
@@ -1937,20 +2120,27 @@
     var N = items.length;
     var metas = [];
     var runningOffset = 8;
+    var sharedRgbIccBytes = state.rgbProfile === "custom" && state.customIccBytes ? state.customIccBytes
+      : state.rgbProfile === "adobergb" ? getAdobeRGBICC()
+      : getSRGBICC();
     for(var idx=0; idx<N; idx++){
       var localStart = idx/N, localSpan = 1/N;
       if(onProgress) onProgress(0.03 + 0.85*localStart, "Page " + (idx+1) + " of " + N + "…");
       var built = await compositeItemToCanvas(items[idx], dims.pageWpx, dims.pageHpx);
       var pixelBuf, channels, photometric, iccBytes = null;
-      if(state.cmyk){
+      if(state.colorMode === "cmyk"){
         pixelBuf = await canvasToCmykBuffer(built.canvas, onProgress, 0.03 + 0.85*(localStart+localSpan*0.1), 0.03 + 0.85*(localStart+localSpan*0.9));
         channels = 4; photometric = 5;
         if(state.cmykProfile === "custom" && state.customIccBytes) iccBytes = state.customIccBytes;
       } else {
         pixelBuf = rgbBufferFromCanvas(built.canvas);
         channels = 3; photometric = 2;
-        if(state.rgbProfile === "srgb") iccBytes = getSRGBICC();
-        else if(state.rgbProfile === "custom" && state.customIccBytes) iccBytes = state.customIccBytes;
+        if(state.colorMode === "match"){
+          var srcItem = items[idx];
+          iccBytes = (srcItem.sourceIcc && srcItem.sourceIcc.bytes) ? srcItem.sourceIcc.bytes : sharedRgbIccBytes;
+        } else {
+          iccBytes = sharedRgbIccBytes;
+        }
       }
       var blockSize = computeTiffBlockSize(pixelBuf.length, channels, !!iccBytes, iccBytes ? iccBytes.length : 0);
       metas.push({ pixelBuf:pixelBuf, channels:channels, photometric:photometric, iccBytes:iccBytes, blockBaseOffset:runningOffset, blockSize:blockSize });
@@ -1999,9 +2189,8 @@
 
   /* ============================= export button wiring ============================= */
   els.exportPdfBtn.addEventListener("click", function(){
-    if(!state.cmyk){ showToast("PDF/X-1a requires CMYK — converting automatically using your selected profile."); }
     runExport(els.exportPdfBtn, async function(onProgress){
-      var blob = await buildPDFX1A(onProgress);
+      var blob = await buildPDF(onProgress);
       downloadBlob(blob, baseFileName() + "-print.pdf");
     });
   });
