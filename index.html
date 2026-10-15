@@ -167,6 +167,12 @@
   .compression-controls { display: flex; gap: 0.6rem; align-items: end; }
   .compression-controls .field { flex: 1; min-width: 0; }
   .utility-status { min-height: 1.3rem; margin: 0.65rem 0 0 !important; font-size: 0.74rem !important; }
+  .image-tool-preview { margin: 1rem 0; }
+  .image-tool-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
+  .image-tool-preview figure { min-width: 0; }
+  .image-tool-preview figcaption { margin-bottom: 0.35rem; color: var(--muted); font-size: 0.68rem; font-weight: 600; }
+  .image-tool-preview img { display: block; width: 100%; height: 180px; object-fit: contain; border: 1px solid var(--border-subtle); border-radius: 4px; background-color: var(--surface-raised); }
+  .image-tool-preview img.result-transparent { background-image: linear-gradient(45deg, #ffffff18 25%, transparent 25%), linear-gradient(-45deg, #ffffff18 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ffffff18 75%), linear-gradient(-45deg, transparent 75%, #ffffff18 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
   .landing-mark { width: min(100%, 280px); aspect-ratio: 1034 / 489; margin: 0 auto 1rem; background: url("morph-logo.svg") center / contain no-repeat; }
   .landing-mark svg { display: none; }
   .landing-tagline { font-size: 0.92rem; color: var(--muted); line-height: 1.55; margin-bottom: 1.85rem; }
@@ -403,11 +409,11 @@
         <button type="button" data-workflow="image-tools">Image tools</button>
       </nav>
       <div id="printFlow">
-      <div class="landing-mark" role="img" aria-label="Morph logo" hidden>
-        <svg viewBox="0 0 577 128" xmlns="http://www.w3.org/2000/svg">
-          <path d="M133.352 0.667219C159.011 5.48911 159.7 36.6591 143.685 81.4337C134.041 108.643 120.781 126.725 103.56 126.725C92.7105 126.725 87.1998 116.22 87.1998 101.755C87.1998 101.066 87.1998 100.205 87.1998 99.3436C87.7164 86.7722 92.1938 71.9622 100.632 58.5298H98.7378C89.7829 72.8232 85.3055 88.8387 85.3055 101.755C77.2116 118.459 65.8457 126.725 53.2744 126.725C43.2862 126.725 39.3254 117.942 38.8087 106.232C38.8087 105.715 38.8087 105.199 38.8087 104.682C38.6365 88.1499 45.0083 66.9681 51.2079 57.4965H49.3136C42.9418 67.3125 36.3978 89.5276 37.0866 106.232C29.165 119.664 19.349 126.725 11.2551 126.725C-9.06564 126.725 2.47243 85.3946 12.1162 61.974C21.9322 38.3812 36.57 10.8276 58.6129 10.8276C71.012 10.8276 78.417 20.988 78.7615 36.8313C74.1118 46.9917 70.8398 58.3576 69.4621 69.7234H71.3564C72.7341 58.3576 76.0061 46.9917 80.6558 36.8313C91.3328 13.4108 110.104 -3.63803 133.352 0.667219Z" fill="#c41e24"/>
-          <path d="M179.683 65.8098C179.683 70.8261 180.24 75.731 181.355 80.5244C182.581 85.2064 184.476 89.4424 187.04 93.2325C189.604 97.0227 192.948 100.088 197.073 102.429C201.197 104.659 206.214 105.773 212.122 105.773C218.03 105.773 223.046 104.659 227.171 102.429C231.296 100.088 234.64 97.0227 237.204 93.2325C239.768 89.4424 241.607 85.2064 242.722 80.5244C243.948 75.731 244.561 70.8261 244.561 65.8098C244.561 60.5704 243.948 55.4983 242.722 50.5934C241.607 45.6886 239.768 41.341 237.204 37.5509C234.64 33.6493 231.296 30.5837 227.171 28.3542C223.046 26.0133 218.03 24.8428 212.122 24.8428C206.214 24.8428 201.197 26.0133 197.073 28.3542C192.948 30.5837 189.604 33.6493 187.04 37.5509C184.476 41.341 182.581 45.6886 181.355 50.5934C180.24 55.4983 179.683 60.5704 179.683 65.8098ZM153.43 65.8098C153.43 56.8918 154.768 48.6426 157.444 41.0623C160.119 33.3706 163.965 26.6821 168.981 20.9969C173.998 15.3117 180.129 10.8527 187.374 7.61992C194.732 4.38715 202.981 2.77077 212.122 2.77077C221.374 2.77077 229.623 4.38715 236.869 7.61992C244.115 10.8527 250.246 15.3117 255.263 20.9969C260.279 26.6821 264.125 33.3706 266.8 41.0623C269.476 48.6426 270.813 56.8918 270.813 65.8098C270.813 74.5048 269.476 82.6424 266.8 90.2227C264.125 97.6915 260.279 104.213 255.263 109.787C250.246 115.36 244.115 119.764 236.869 122.996C229.623 126.118 221.374 127.678 212.122 127.678C202.981 127.678 194.732 126.118 187.374 122.996C180.129 119.764 173.998 115.36 168.981 109.787C163.965 104.213 160.119 97.6915 157.444 90.2227C154.768 82.6424 153.43 74.5048 153.43 65.8098Z" fill="black"/>
-          <path d="M299.962 59.6229H328.722C334.742 59.6229 339.257 58.2852 342.267 55.6098C345.276 52.9344 346.781 48.5869 346.781 42.5673C346.781 36.7706 345.276 32.5903 342.267 30.0263C339.257 27.351 334.742 26.0133 328.722 26.0133H299.962V59.6229ZM273.71 5.61337H338.086C343.437 5.61337 348.23 6.50517 352.466 8.28877C356.814 9.96089 360.493 12.3019 363.502 15.3117C366.624 18.3215 368.965 21.8329 370.525 25.846C372.198 29.7477 373.034 33.9837 373.034 38.5542C373.034 45.5771 371.529 51.6524 368.519 56.7803C365.62 61.9081 360.827 65.8097 354.139 68.4851V68.8196C357.371 69.7114 360.047 71.1048 362.165 72.9999C364.283 74.7835 366.011 76.9572 367.348 79.5211C368.686 81.9736 369.634 84.7047 370.191 87.7145C370.86 90.7244 371.306 93.7342 371.529 96.744C371.64 98.6391 371.752 100.869 371.863 103.432C371.975 105.996 372.142 108.616 372.365 111.291C372.699 113.967 373.145 116.531 373.702 118.983C374.371 121.324 375.319 123.331 376.545 125.003H350.293C348.844 121.213 347.952 116.698 347.617 111.459C347.283 106.219 346.781 101.203 346.112 96.4096C345.221 90.167 343.326 85.5965 340.427 82.6982C337.529 79.7998 332.791 78.3507 326.214 78.3507H299.962V125.003H273.71V5.61337Z" fill="black"/>
+        <h1>Compress any file</h1>
+        <p>GZIP compresses any file losslessly. PNG, JPEG, and WebP images can also be re-encoded as JPEG or WebP, which is lossy. Target sizes are best-effort and the source is never changed.</p>
+        <label class="btn btn-primary btn-lg" for="compressFileInput" style="cursor:pointer;">Choose file</label>
+        <input type="file" id="compressFileInput" hidden>
+        <p class="utility-status utility-file-name" id="compressFileName">No file selected</p>
           <path d="M405.586 61.7967H425.986C428.996 61.7967 431.894 61.5737 434.681 61.1278C437.468 60.6819 439.921 59.8458 442.039 58.6196C444.157 57.2819 445.829 55.4426 447.055 53.1016C448.393 50.7607 449.062 47.6951 449.062 43.905C449.062 40.1148 448.393 37.0493 447.055 34.7083C445.829 32.3673 444.157 30.5837 442.039 29.3575C439.921 28.0198 437.468 27.128 434.681 26.6821C431.894 26.2362 428.996 26.0133 425.986 26.0133H405.586V61.7967ZM379.334 5.61337H433.176C440.645 5.61337 446.999 6.72812 452.239 8.95762C457.478 11.0756 461.714 13.9182 464.947 17.4854C468.291 21.0526 470.688 25.1215 472.137 29.6919C473.697 34.2624 474.478 39.0001 474.478 43.905C474.478 48.6984 473.697 53.436 472.137 58.118C470.688 62.6885 468.291 66.7573 464.947 70.3245C461.714 73.8917 457.478 76.79 452.239 79.0195C446.999 81.1375 440.645 82.1965 433.176 82.1965H405.586V125.003H379.334V5.61337Z" fill="black"/>
           <path d="M475.814 5.61337H502.066V51.4295H550.391V5.61337H576.643V125.003H550.391V73.5015H502.066V125.003H475.814V5.61337Z" fill="black"/>
         </svg>
@@ -459,10 +465,11 @@
           </div>
         </div>
         <div class="field">
-          <label for="compressFormat">Encoding</label>
+          <label for="compressFormat">Output</label>
           <select id="compressFormat" style="width:100%;">
-            <option value="image/jpeg">JPEG (lossy)</option>
-            <option value="image/webp">WebP (lossy)</option>
+            <option value="application/gzip">GZIP (any file, lossless)</option>
+            <option value="image/jpeg" selected>JPEG image (lossy)</option>
+            <option value="image/webp">WebP image (lossy)</option>
           </select>
         </div>
         <p class="hint" id="compressHint">The output may miss the requested target if the encoder cannot reach it.</p>
@@ -506,7 +513,15 @@
           <p class="hint">Uses high-quality browser resampling; it does not generate new detail.</p>
         </div>
         <p class="utility-status" id="imageToolsHint">Choose an image to begin.</p>
-        <button class="btn btn-primary btn-lg" id="imageToolRunBtn" type="button" disabled>Run tool and download</button>
+        <div class="image-tool-preview" id="imageToolPreview" hidden>
+          <p class="hint" id="imageToolPreviewSummary"></p>
+          <div class="image-tool-preview-grid">
+            <figure><figcaption>Original</figcaption><img id="imageToolBefore" alt="Original image preview"></figure>
+            <figure><figcaption id="imageToolAfterLabel">Preview</figcaption><img id="imageToolAfter" alt="Processed image preview"></figure>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-lg" id="imageToolRunBtn" type="button" disabled>Generate preview</button>
+        <button class="btn btn-outline btn-lg" id="imageToolDownloadBtn" type="button" disabled>Download result</button>
       </section>
     </div>
   </div>
@@ -731,7 +746,7 @@
       <h3>Image tools</h3>
       <p>Vectorize traces an image into SVG shapes. Background removal makes edge-connected pixels matching a chosen flat color transparent. Upscaling uses browser interpolation at 2× or 4×; it cannot invent image detail. The free ImageTracer library loads on demand, while your image stays local.</p>
       <h3>Compression</h3>
-      <p>Compression targets a file size or reduction percentage and exports JPEG or WebP. It is lossy, and the browser encoder may not reach the exact requested size. The original file is not changed.</p>
+      <p>GZIP compression works on any file type and preserves the original bytes, but downloads a .gz wrapper rather than converting the file. Its browser-controlled compression strength may not reach the requested size. PNG, JPEG, and WebP images can alternatively be re-encoded to JPEG or WebP; those outputs are lossy, and their size targets are best-effort.</p>
       <h3>PDF input</h3>
       <p>In Print-ready, uploaded PDFs are rasterized page-by-page in your browser (via pdf.js), then treated like images for layout and export. Vector content, live text, and layers are flattened, and fitting to page settings can resample pixels. To preserve an existing PDF exactly, use Convert and choose Original file.</p>
       <h3>Color modes</h3>
@@ -811,6 +826,10 @@
   var compressFile = null;
   var imageToolsFile = null;
   var imageToolMode = "vectorize";
+  var imageToolSourceUrl = null;
+  var imageToolResultUrl = null;
+  var imageToolResultBlob = null;
+  var imageToolResultName = "";
 
   var state = {
     sizeUnit:"mm", pageWidth:210, pageHeight:297, presetKey:"A4", orientation:"portrait",
@@ -838,7 +857,8 @@
   "printFlow","convertFlow","compressFlow","imageToolsFlow","convertFileInput","convertFileName","convertFormat","convertHint","convertBtn",
    "compressFileInput","compressFileName","compressMode","compressTarget","compressTargetLabel","compressFormat","compressHint","compressBtn",
   "imageToolsFileInput","imageToolsFileName","imageToolModes","vectorizeOptions","backgroundOptions","upscaleOptions",
-  "vectorizeStyle","backgroundColor","backgroundTolerance","upscaleFactor","imageToolsHint","imageToolRunBtn",
+  "vectorizeStyle","backgroundColor","backgroundTolerance","upscaleFactor","imageToolsHint","imageToolRunBtn","imageToolDownloadBtn",
+  "imageToolPreview","imageToolPreviewSummary","imageToolBefore","imageToolAfter","imageToolAfterLabel",
    "topbarLeft","topbarRight","topbarActions","downloadBtn","pageOutline","contentArea","previewImg","pageCaption","mismatchBanner",
    "landingActions","landingShareBtn","shareStoryOverlay","shareStoryCloseBtn","shareStoryBtn",
    "pagesStripItems","addMoreBtn","fileInputMore","pageNav","prevPageBtn","nextPageBtn","pageNavLabel",
@@ -1211,15 +1231,11 @@
   els.convertBtn.addEventListener("click", runConversion);
 
   els.compressFileInput.addEventListener("change", function(){
-    var selected = this.files && this.files[0] || null;
-    compressFile = selected && isCompressibleRasterFile(selected) ? selected : null;
-    els.compressFileName.textContent = compressFile
-      ? compressFile.name + " · " + formatFileSize(compressFile.size)
-      : (selected ? "Choose a PNG, JPEG, or WebP image." : "No image selected");
-    els.compressBtn.disabled = !compressFile;
+    setCompressFile(this.files && this.files[0] || null);
     this.value = "";
   });
   els.compressMode.addEventListener("change", syncCompressionTarget);
+  els.compressFormat.addEventListener("change", syncCompressionHint);
   els.compressBtn.addEventListener("click", runCompression);
   els.imageToolsFileInput.addEventListener("change", function(){
     setImageToolsFile(this.files && this.files[0] || null);
@@ -1229,6 +1245,7 @@
     var button = event.target.closest("button[data-tool]");
     if(!button) return;
     imageToolMode = button.dataset.tool;
+    clearImageToolPreview();
     Array.prototype.forEach.call(els.imageToolModes.querySelectorAll("button"), function(tab){
       tab.classList.toggle("active", tab === button);
     });
@@ -1237,7 +1254,14 @@
     els.upscaleOptions.hidden = imageToolMode !== "upscale";
     els.imageToolsHint.textContent = imageToolsFile ? "Ready to process " + imageToolsFile.name + "." : "Choose an image to begin.";
   });
+  [els.vectorizeStyle, els.backgroundColor, els.backgroundTolerance, els.upscaleFactor].forEach(function(control){
+    control.addEventListener("input", invalidateImageToolPreview);
+    control.addEventListener("change", invalidateImageToolPreview);
+  });
   els.imageToolRunBtn.addEventListener("click", runImageTool);
+  els.imageToolDownloadBtn.addEventListener("click", function(){
+    if(imageToolResultBlob && imageToolResultName) downloadBlob(imageToolResultBlob, imageToolResultName);
+  });
 
   els.logoHomeBtn.addEventListener("click", function(){
     items = []; activeItemId = null;
@@ -1803,6 +1827,31 @@
   function isCompressibleRasterFile(file){
     return /^image\/(png|jpeg|webp)$/.test(file.type) || /\.(png|jpe?g|webp)$/i.test(file.name);
   }
+  function setCompressFile(file){
+    compressFile = file;
+    els.compressFileName.textContent = file ? file.name + " · " + formatFileSize(file.size) : "No file selected";
+    els.compressBtn.disabled = !file;
+    syncCompressionOptions();
+  }
+  function syncCompressionOptions(){
+    var canEncodeRaster = !!compressFile && isCompressibleRasterFile(compressFile);
+    Array.prototype.forEach.call(els.compressFormat.options, function(option){
+      option.disabled = option.value !== "application/gzip" && !canEncodeRaster;
+    });
+    if(els.compressFormat.selectedOptions[0] && els.compressFormat.selectedOptions[0].disabled){
+      els.compressFormat.value = "application/gzip";
+    }
+    syncCompressionHint();
+  }
+  function syncCompressionHint(){
+    if(els.compressFormat.value === "application/gzip"){
+      els.compressHint.textContent = compressFile
+        ? "GZIP preserves the original bytes for any file type. The requested size is best-effort; browser compression strength is fixed."
+        : "GZIP preserves original bytes for any file type. The requested size is best-effort.";
+    } else {
+      els.compressHint.textContent = "JPEG and WebP re-encoding is lossy. Target size is best-effort and transparency is flattened to white for JPEG.";
+    }
+  }
   function syncConversionOptions(){
     var canConvertImage = !!convertFile && isSupportedRasterFile(convertFile);
     Array.prototype.forEach.call(els.convertFormat.options, function(option){
@@ -1986,9 +2035,28 @@
       showToast("Enter a valid compression target."); return;
     }
     els.compressBtn.disabled = true;
-    showExportProgress("Preparing image…");
+    showExportProgress("Preparing file…");
     try {
-      var canvas = await loadRasterCanvas(compressFile), type = els.compressFormat.value;
+      var type = els.compressFormat.value;
+      var targetBytes = els.compressMode.value === "percent"
+        ? compressFile.size*(1-value/100)
+        : value*1024;
+      if(type === "application/gzip"){
+        if(typeof CompressionStream !== "function") throw new Error("This browser does not support GZIP compression. Try a recent Chrome, Edge, or Safari.");
+        setExportProgress(0.3, "GZIP-compressing file…");
+        var sourceStream = compressFile.stream
+          ? compressFile.stream()
+          : new Blob([await compressFile.arrayBuffer()]).stream();
+        var gzipBlob = await new Response(sourceStream.pipeThrough(new CompressionStream("gzip"))).blob();
+        var gzipName = compressFile.name + ".gz";
+        downloadBlob(gzipBlob, gzipName);
+        var gzipAchieved = gzipBlob.size <= targetBytes;
+        els.compressHint.textContent = "Downloaded " + gzipName + " (" + formatFileSize(gzipBlob.size) + ")" +
+          (gzipAchieved ? ", at or below target." : "; the requested target was not reached.");
+        return;
+      }
+      if(!isCompressibleRasterFile(compressFile)) throw new Error("JPEG and WebP output is only available for PNG, JPEG, and WebP images.");
+      var canvas = await loadRasterCanvas(compressFile);
       if(type === "image/jpeg"){
         var jpegCanvas = document.createElement("canvas");
         jpegCanvas.width = canvas.width; jpegCanvas.height = canvas.height;
@@ -1997,9 +2065,6 @@
         jpegContext.drawImage(canvas, 0, 0);
         canvas = jpegCanvas;
       }
-      var targetBytes = els.compressMode.value === "percent"
-        ? compressFile.size*(1-value/100)
-        : value*1024;
       var low = 0.05, high = 0.98, best = null, smallest = null;
       for(var attempt=0; attempt<9; attempt++){
         var quality = (low+high)/2;
@@ -2023,12 +2088,46 @@
     }
   }
   function setImageToolsFile(file){
+    clearImageToolPreview();
+    if(imageToolSourceUrl) URL.revokeObjectURL(imageToolSourceUrl);
+    imageToolSourceUrl = null;
     imageToolsFile = file && isSupportedRasterFile(file) ? file : null;
+    if(imageToolsFile) imageToolSourceUrl = URL.createObjectURL(imageToolsFile);
     els.imageToolsFileName.textContent = imageToolsFile
       ? imageToolsFile.name + " · " + formatFileSize(imageToolsFile.size)
       : (file ? "Choose a browser-readable raster image." : "No image selected");
     els.imageToolRunBtn.disabled = !imageToolsFile;
     els.imageToolsHint.textContent = imageToolsFile ? "Ready to process " + imageToolsFile.name + "." : "Choose an image to begin.";
+  }
+  function clearImageToolPreview(){
+    if(imageToolResultUrl) URL.revokeObjectURL(imageToolResultUrl);
+    imageToolResultUrl = null;
+    imageToolResultBlob = null;
+    imageToolResultName = "";
+    els.imageToolPreview.hidden = true;
+    els.imageToolBefore.removeAttribute("src");
+    els.imageToolAfter.removeAttribute("src");
+    els.imageToolAfter.classList.remove("result-transparent");
+    els.imageToolDownloadBtn.disabled = true;
+  }
+  function invalidateImageToolPreview(){
+    if(!imageToolsFile) return;
+    clearImageToolPreview();
+    els.imageToolsHint.textContent = "Settings changed. Generate a fresh preview before downloading.";
+  }
+  function showImageToolPreview(blob, filename, summary, resultLabel, transparent){
+    clearImageToolPreview();
+    imageToolResultBlob = blob;
+    imageToolResultName = filename;
+    imageToolResultUrl = URL.createObjectURL(blob);
+    els.imageToolBefore.src = imageToolSourceUrl;
+    els.imageToolAfter.src = imageToolResultUrl;
+    els.imageToolAfterLabel.textContent = resultLabel;
+    els.imageToolAfter.classList.toggle("result-transparent", !!transparent);
+    els.imageToolPreviewSummary.textContent = summary;
+    els.imageToolPreview.hidden = false;
+    els.imageToolDownloadBtn.disabled = false;
+    els.imageToolsHint.textContent = "Preview ready. Review the result, then download it.";
   }
   function ensureImageTracer(){
     if(window.ImageTracer) return Promise.resolve();
@@ -2070,11 +2169,13 @@
       if(py+1<height) seed(pixel+width);
     }
     context.putImageData(imageData, 0, 0);
+    return { removedPixels:tail, percent:tail/count*100 };
   }
   async function runImageTool(){
     if(!imageToolsFile || els.imageToolRunBtn.disabled) return;
+    clearImageToolPreview();
     els.imageToolRunBtn.disabled = true;
-    showExportProgress("Preparing image…");
+    showExportProgress("Preparing preview…");
     try {
       var canvas = await loadRasterCanvas(imageToolsFile), base = imageToolsFile.name.replace(/\.[^.]+$/, "") || "image";
       if(imageToolMode === "vectorize"){
@@ -2091,13 +2192,14 @@
         setExportProgress(0.65, "Tracing paths…");
         var imageData = canvas.getContext("2d", { willReadFrequently:true }).getImageData(0, 0, canvas.width, canvas.height);
         var svg = window.ImageTracer.imagedataToSVG(imageData, els.vectorizeStyle.value);
-        downloadBlob(new Blob([svg], { type:"image/svg+xml" }), base + ".svg");
-        els.imageToolsHint.textContent = "Downloaded vector SVG. Tracing simplifies the original pixels into editable shapes.";
+        var svgBlob = new Blob([svg], { type:"image/svg+xml" });
+        showImageToolPreview(svgBlob, base + ".svg", "SVG vector preview. Tracing approximates the source as editable paths and shapes.", "Vector result", false);
       } else if(imageToolMode === "background"){
-        removeFlatBackground(canvas, els.backgroundColor.value, Number(els.backgroundTolerance.value));
+        var removal = removeFlatBackground(canvas, els.backgroundColor.value, Number(els.backgroundTolerance.value));
         var transparentPng = await canvasBlob(canvas, "image/png");
-        downloadBlob(transparentPng, base + "-no-background.png");
-        els.imageToolsHint.textContent = "Downloaded PNG with matching edge-connected background pixels made transparent.";
+        showImageToolPreview(transparentPng, base + "-no-background.png",
+          removal.percent.toFixed(1) + "% of pixels were matched and made transparent. Inspect the edges before downloading.",
+          "Transparent result", true);
       } else {
         var factor = Number(els.upscaleFactor.value), width = canvas.width*factor, height = canvas.height*factor;
         if(canvasTooLarge(width, height)) throw new Error("This scale would exceed the browser's image limits. Try 2× or a smaller source.");
@@ -2106,8 +2208,9 @@
         enlargeContext.imageSmoothingEnabled = true; enlargeContext.imageSmoothingQuality = "high";
         enlargeContext.drawImage(canvas, 0, 0, width, height);
         var enlargedPng = await canvasBlob(enlarged, "image/png");
-        downloadBlob(enlargedPng, base + "-" + factor + "x.png");
-        els.imageToolsHint.textContent = "Downloaded " + width + " × " + height + " PNG using high-quality interpolation.";
+        showImageToolPreview(enlargedPng, base + "-" + factor + "x.png",
+          "Upscaled preview at " + width + " × " + height + " pixels using high-quality interpolation.",
+          "Upscaled result", false);
       }
     } catch(err){
       showToast(err && err.message || "Image tool failed.");
@@ -2727,9 +2830,7 @@
       els.convertFileName.textContent = convertFile.name + " · " + formatFileSize(convertFile.size);
       syncConversionOptions();
     } else if(workflow === "compress"){
-      compressFile = isCompressibleRasterFile(files[0]) ? files[0] : null;
-      els.compressFileName.textContent = compressFile ? compressFile.name + " · " + formatFileSize(compressFile.size) : "Choose a PNG, JPEG, or WebP image.";
-      els.compressBtn.disabled = !compressFile;
+      setCompressFile(files[0]);
     } else if(workflow === "image-tools"){
       setImageToolsFile(files[0]);
     } else {
