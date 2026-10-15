@@ -72,24 +72,19 @@
   .app { min-height: 100vh; display: flex; flex-direction: column; }
 
   .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 1rem;
-    height: 160px;
-    padding: 0.75rem 1.5rem;
+    padding: 1.1rem 1.5rem;
     border-bottom: 1px solid var(--border-subtle);
-    background: var(--bg);
   }
 
-  .logo { display: inline-flex; align-items: center; justify-content: center; padding: 0; width: min(310px, 48vw); aspect-ratio: 1034 / 489; background: url("morph-logo.svg") center / contain no-repeat; }
+  .logo { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0; width: 108px; height: 52px; background: url("morph-logo.svg") center / contain no-repeat; }
   .logo svg { display: none; }
 
-  .topbar-left { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; }
-  .topbar-right { position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 1rem; }
+  .topbar-left { display: flex; align-items: center; gap: 0.6rem; }
+  .topbar-right { display: flex; align-items: center; gap: 1rem; }
   .topbar-actions { display: flex; align-items: center; gap: 1.25rem; }
 
   .topbar-icon-btn {
@@ -156,7 +151,7 @@
   .info-card strong { color: var(--fg); }
 
   /* ---------- landing ---------- */
-  .landing { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 0.5rem 1.5rem 2rem; text-align: center; }
+  .landing { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; text-align: center; }
   .landing-inner { max-width: 27rem; width: 100%; }
   .workflow-tabs { display: flex; justify-content: center; overflow-x: auto; border-bottom: 1px solid var(--border-subtle); margin: 0 auto 1.6rem; }
   .workflow-tabs button { padding: 0.65rem 0.8rem; color: var(--muted); font-size: 0.78rem; font-weight: 600; border-bottom: 2px solid transparent; }
@@ -172,7 +167,7 @@
   .compression-controls { display: flex; gap: 0.6rem; align-items: end; }
   .compression-controls .field { flex: 1; min-width: 0; }
   .utility-status { min-height: 1.3rem; margin: 0.65rem 0 0 !important; font-size: 0.74rem !important; }
-  .landing-mark { display: none; }
+  .landing-mark { width: min(100%, 280px); aspect-ratio: 1034 / 489; margin: 0 auto 1rem; background: url("morph-logo.svg") center / contain no-repeat; }
   .landing-mark svg { display: none; }
   .landing-tagline { font-size: 0.92rem; color: var(--muted); line-height: 1.55; margin-bottom: 1.85rem; }
   .landing-note { margin-top: 1.3rem; font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
@@ -361,9 +356,6 @@
   .share-story-spacer-bottom { flex: 1; }
   .share-story-bar { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: center; }
   @media (max-width: 600px) {
-    .topbar { height: 112px; padding-inline: 0.75rem; }
-    .logo { width: min(170px, 40vw); }
-    .topbar-right { right: 0.75rem; gap: 0.4rem; }
     .landing { padding-inline: 0.75rem; }
     .workflow-tabs button { padding-inline: 0.55rem; }
   }
@@ -403,6 +395,7 @@
   <!-- Landing / upload -->
   <div class="landing" id="landingView">
     <div class="landing-inner">
+      <div class="landing-mark" role="img" aria-label="Morph logo"></div>
       <nav class="workflow-tabs" aria-label="File tools">
         <button type="button" class="active" data-workflow="print">Print-ready</button>
         <button type="button" data-workflow="convert">Convert</button>
@@ -410,7 +403,7 @@
         <button type="button" data-workflow="image-tools">Image tools</button>
       </nav>
       <div id="printFlow">
-      <div class="landing-mark" role="img" aria-label="Morph logo">
+      <div class="landing-mark" role="img" aria-label="Morph logo" hidden>
         <svg viewBox="0 0 577 128" xmlns="http://www.w3.org/2000/svg">
           <path d="M133.352 0.667219C159.011 5.48911 159.7 36.6591 143.685 81.4337C134.041 108.643 120.781 126.725 103.56 126.725C92.7105 126.725 87.1998 116.22 87.1998 101.755C87.1998 101.066 87.1998 100.205 87.1998 99.3436C87.7164 86.7722 92.1938 71.9622 100.632 58.5298H98.7378C89.7829 72.8232 85.3055 88.8387 85.3055 101.755C77.2116 118.459 65.8457 126.725 53.2744 126.725C43.2862 126.725 39.3254 117.942 38.8087 106.232C38.8087 105.715 38.8087 105.199 38.8087 104.682C38.6365 88.1499 45.0083 66.9681 51.2079 57.4965H49.3136C42.9418 67.3125 36.3978 89.5276 37.0866 106.232C29.165 119.664 19.349 126.725 11.2551 126.725C-9.06564 126.725 2.47243 85.3946 12.1162 61.974C21.9322 38.3812 36.57 10.8276 58.6129 10.8276C71.012 10.8276 78.417 20.988 78.7615 36.8313C74.1118 46.9917 70.8398 58.3576 69.4621 69.7234H71.3564C72.7341 58.3576 76.0061 46.9917 80.6558 36.8313C91.3328 13.4108 110.104 -3.63803 133.352 0.667219Z" fill="#c41e24"/>
           <path d="M179.683 65.8098C179.683 70.8261 180.24 75.731 181.355 80.5244C182.581 85.2064 184.476 89.4424 187.04 93.2325C189.604 97.0227 192.948 100.088 197.073 102.429C201.197 104.659 206.214 105.773 212.122 105.773C218.03 105.773 223.046 104.659 227.171 102.429C231.296 100.088 234.64 97.0227 237.204 93.2325C239.768 89.4424 241.607 85.2064 242.722 80.5244C243.948 75.731 244.561 70.8261 244.561 65.8098C244.561 60.5704 243.948 55.4983 242.722 50.5934C241.607 45.6886 239.768 41.341 237.204 37.5509C234.64 33.6493 231.296 30.5837 227.171 28.3542C223.046 26.0133 218.03 24.8428 212.122 24.8428C206.214 24.8428 201.197 26.0133 197.073 28.3542C192.948 30.5837 189.604 33.6493 187.04 37.5509C184.476 41.341 182.581 45.6886 181.355 50.5934C180.24 55.4983 179.683 60.5704 179.683 65.8098ZM153.43 65.8098C153.43 56.8918 154.768 48.6426 157.444 41.0623C160.119 33.3706 163.965 26.6821 168.981 20.9969C173.998 15.3117 180.129 10.8527 187.374 7.61992C194.732 4.38715 202.981 2.77077 212.122 2.77077C221.374 2.77077 229.623 4.38715 236.869 7.61992C244.115 10.8527 250.246 15.3117 255.263 20.9969C260.279 26.6821 264.125 33.3706 266.8 41.0623C269.476 48.6426 270.813 56.8918 270.813 65.8098C270.813 74.5048 269.476 82.6424 266.8 90.2227C264.125 97.6915 260.279 104.213 255.263 109.787C250.246 115.36 244.115 119.764 236.869 122.996C229.623 126.118 221.374 127.678 212.122 127.678C202.981 127.678 194.732 126.118 187.374 122.996C180.129 119.764 173.998 115.36 168.981 109.787C163.965 104.213 160.119 97.6915 157.444 90.2227C154.768 82.6424 153.43 74.5048 153.43 65.8098Z" fill="black"/>
@@ -732,14 +725,20 @@
       </button>
       <span class="eyebrow">About</span>
       <h2>Morph</h2>
-      <p>Morph converts images and PDFs into a print-ready file. Add one file or several — every PDF page and every image becomes its own page — pick a page size and unit, choose whether each page fits within the page or fills it, set independent padding, dial in DPI (300 by default, the standard for press-quality output), and choose a color mode. Multiple sources compile into a single output file, one page per source.</p>
+      <p>Morph is a free, browser-based file studio. Prepare images and PDFs for print, convert common image formats, compress images to a target size, or run local vectorization, background-removal, and upscaling tools. Files stay on your device; no paid services are used.</p>
+      <h3>File conversion</h3>
+      <p>Convert browser-readable raster images to PNG, JPG, WebP, TIFF, BMP, or PDF. PNG, TIFF, and generated PDF preserve decoded pixel values; JPG and WebP use lossy encoding. Digital PDF uses 96 DPI sizing and Print PDF uses 300 DPI without resizing pixels. Other file types can be copied byte-for-byte, but require a format-specific engine to convert.</p>
+      <h3>Image tools</h3>
+      <p>Vectorize traces an image into SVG shapes. Background removal makes edge-connected pixels matching a chosen flat color transparent. Upscaling uses browser interpolation at 2× or 4×; it cannot invent image detail. The free ImageTracer library loads on demand, while your image stays local.</p>
+      <h3>Compression</h3>
+      <p>Compression targets a file size or reduction percentage and exports JPEG or WebP. It is lossy, and the browser encoder may not reach the exact requested size. The original file is not changed.</p>
       <h3>PDF input</h3>
       <p>In Print-ready, uploaded PDFs are rasterized page-by-page in your browser (via pdf.js), then treated like images for layout and export. Vector content, live text, and layers are flattened, and fitting to page settings can resample pixels. To preserve an existing PDF exactly, use Convert and choose Original file.</p>
       <h3>Color modes</h3>
       <p><strong>Match Source</strong> (default) makes no color conversion at all: if the uploaded PNG or JPEG has an embedded ICC profile, that exact profile is carried through and embedded directly in the exported file's image data; if none is found, the export is tagged sRGB, which is what your browser used to decode the pixels. This is the mode to use if you don't want Morph to touch your color in any way.</p>
       <p><strong>RGB</strong> exports DeviceRGB pixel data with your chosen output profile (sRGB, Adobe RGB, or your own uploaded ICC file) embedded directly on the image, so Illustrator, CorelDRAW, Acrobat, and other ICC-aware apps display it exactly as tagged instead of reinterpreting it through their own default working space — which is what caused unexpected color shifts before.</p>
       <p><strong>CMYK</strong> converts for press output. Browsers have no built-in color-management engine, so this conversion is a documented <strong>device approximation</strong> (proper black generation, not a naive channel inversion) — not a true ICC-managed transform. Named output profiles (SWOP v2, FOGRA39) tag the export with the correct industry-standard identifier but are only embedded as real ICC binaries if you upload your own ICC file — in which case it's embedded verbatim on the image, not just referenced.</p>
-      <h3>Quality &amp; compression</h3>
+      <h3>Output quality</h3>
       <p>Print-ready PDF and TIFF store rendered pixel data with lossless Flate compression, never JPEG. Layout scaling, color conversion, and rasterizing a PDF can still change source content. The Convert workflow keeps PNG, TIFF, and generated PDF pixel data lossless; JPG and WebP are intentionally lossy.</p>
       <h3>PDF/X-1a</h3>
       <p>When CMYK is selected, PDF exports are hand-written to be structurally compliant with PDF/X-1a — CMYK-only color, embedded OutputIntent, no transparency. This is best-effort compliance; it is not run through a certified preflight validator. RGB and Match Source exports are standard, widely compatible PDFs (not PDF/X, since PDF/X-1a requires CMYK) built with the same plain cross-reference table structure for maximum compatibility with Illustrator, CorelDRAW, and other PDF readers.</p>
