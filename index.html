@@ -12,18 +12,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  [hidden] { display: none !important; }
-
-  :root {
-    --bg: #412833;
-    --fg: #ffffff;
-    --border: #e5c7ca;
-    --border-subtle: #e5c7ca66;
-    --accent: #e5c7ca;
-    --muted: #ffffff;
-    --hover: #e5c7ca;
-    --hover-ink: #412833;
-    --surface-raised: #523743;
+        <p class="landing-kicker">PRESS WORKFLOW</p>
+        <h1 class="landing-title">Print-ready files</h1>
+        <p class="landing-tagline">Set page size, fit, padding, resolution, and color, then compile images or PDF pages into a press-ready export.</p>
+        <div class="print-upload">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+          <div class="print-upload-copy"><strong>Drop files to begin</strong><span>PNG, JPEG, WebP, or PDF · processed on this device</span></div>
+          <label class="btn btn-primary btn-lg" for="fileInputLanding" style="cursor:pointer;">Choose files</label>
+        </div>
+        <input type="file" id="fileInputLanding" accept="image/png,image/jpeg,image/webp,application/pdf" multiple hidden>
+        <p class="landing-note">Each PDF page becomes a separate page. Print-ready PDF input is rasterized and may be resampled.</p>
+    --space-2: 1rem;
+    --space-3: 1.5rem;
+    --space-4: 2rem;
+    --content-max: 38rem;
     --ui-font: "Inter Tight", sans-serif;
     --mono-font: "Inter Tight", sans-serif;
     --transition-fast: 180ms ease-out;
@@ -76,7 +78,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1.1rem 1.5rem;
+    padding: var(--space-2) var(--space-3);
     border-bottom: 1px solid var(--border-subtle);
   }
 
@@ -132,7 +134,7 @@
     position: fixed; inset: 0; background: #00000055; z-index: 200;
     display: flex; align-items: center; justify-content: center; padding: 1.5rem;
   }
-  .info-card {
+  .info-card { 
     position: relative; background: var(--bg); border-radius: 14px;
     box-shadow: 0 24px 60px #00000030; max-width: 28rem; width: 100%;
     padding: 2rem 1.75rem 1.75rem; max-height: 85vh; overflow-y: auto;
@@ -151,32 +153,38 @@
   .info-card strong { color: var(--fg); }
 
   /* ---------- landing ---------- */
-  .landing { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; text-align: center; }
-  .landing-inner { max-width: 27rem; width: 100%; }
-  .workflow-tabs { display: flex; justify-content: center; overflow-x: auto; border-bottom: 1px solid var(--border-subtle); margin: 0 auto 1.6rem; }
-  .workflow-tabs button { padding: 0.65rem 0.8rem; color: var(--muted); font-size: 0.78rem; font-weight: 600; border-bottom: 2px solid transparent; }
-  .workflow-tabs button { flex-shrink: 0; }
-  .workflow-tabs button:hover { background: var(--hover); color: var(--hover-ink); }
-  .workflow-tabs button.active { color: var(--fg); border-bottom-color: var(--accent); }
+  .landing { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--space-4) var(--space-3); text-align: center; }
+  .landing-inner { max-width: var(--content-max); width: 100%; }
+  .workflow-tabs { display: flex; gap: var(--space-1); width: 100%; margin: 0 auto var(--space-4); padding: var(--space-1); border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface-raised); }
+  .workflow-tabs button { flex: 1 1 0; min-width: 0; min-height: 2.65rem; padding: 0.55rem 0.65rem; border-radius: 6px; color: var(--muted); font-size: 0.8rem; font-weight: 600; transition: background var(--transition-fast), color var(--transition-fast); }
+  .workflow-tabs button:hover, .workflow-tabs button.active { background: var(--accent); color: var(--hover-ink); }
   .utility-panel { text-align: left; }
-  .utility-panel h1 { font-size: 1.05rem; margin-bottom: 0.4rem; }
-  .utility-panel > p { color: var(--muted); font-size: 0.82rem; line-height: 1.55; margin-bottom: 1.1rem; }
-  .utility-panel .field { margin: 0.9rem 0; }
+  .utility-panel h1 { font-size: 1.5rem; line-height: 1.15; margin-bottom: var(--space-1); }
+  .utility-panel > p { color: var(--muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: var(--space-3); }
+  .utility-panel .field { margin: var(--space-2) 0; }
   .utility-panel .btn { width: 100%; }
   .utility-file-name { color: var(--fg) !important; overflow-wrap: anywhere; }
-  .compression-controls { display: flex; gap: 0.6rem; align-items: end; }
+  .compression-controls { display: flex; gap: var(--space-1); align-items: end; }
   .compression-controls .field { flex: 1; min-width: 0; }
-  .utility-status { min-height: 1.3rem; margin: 0.65rem 0 0 !important; font-size: 0.74rem !important; }
-  .image-tool-preview { margin: 1rem 0; }
-  .image-tool-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
+  .utility-status { min-height: 1.3rem; margin: var(--space-1) 0 0 !important; font-size: 0.78rem !important; }
+  .image-tool-preview { margin: var(--space-2) 0; }
+  .image-tool-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
   .image-tool-preview figure { min-width: 0; }
   .image-tool-preview figcaption { margin-bottom: 0.35rem; color: var(--muted); font-size: 0.68rem; font-weight: 600; }
   .image-tool-preview img { display: block; width: 100%; height: 180px; object-fit: contain; border: 1px solid var(--border-subtle); border-radius: 4px; background-color: var(--surface-raised); }
   .image-tool-preview img.result-transparent { background-image: linear-gradient(45deg, #ffffff18 25%, transparent 25%), linear-gradient(-45deg, #ffffff18 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ffffff18 75%), linear-gradient(-45deg, transparent 75%, #ffffff18 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
-  .landing-mark { width: min(100%, 280px); aspect-ratio: 1034 / 489; margin: 0 auto 1rem; background: url("morph-logo.svg") center / contain no-repeat; }
+  .landing-mark { width: min(100%, 260px); aspect-ratio: 1034 / 489; margin: 0 auto var(--space-2); background: url("morph-logo.svg") center / contain no-repeat; }
   .landing-mark svg { display: none; }
-  .landing-tagline { font-size: 0.92rem; color: var(--muted); line-height: 1.55; margin-bottom: 1.85rem; }
-  .landing-note { margin-top: 1.3rem; font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+  .landing-kicker { margin-bottom: 0.4rem; color: var(--accent); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+  .landing-title { margin-bottom: var(--space-1); font-size: 1.8rem; line-height: 1.12; font-weight: 700; }
+  .landing-tagline { max-width: 34rem; margin: 0 auto var(--space-3); color: var(--muted); font-size: 0.96rem; line-height: 1.5; }
+  .print-upload { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); margin: 0 auto; padding: var(--space-2) var(--space-3); border: 1px dashed var(--border); border-radius: 8px; background: var(--surface-raised); text-align: left; }
+  .print-upload > svg { width: 1.7rem; height: 1.7rem; color: var(--accent); }
+  .print-upload-copy { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+  .print-upload-copy strong { font-size: 0.9rem; }
+  .print-upload-copy span { color: var(--muted); font-size: 0.76rem; }
+  .print-upload:hover { border-color: var(--accent); background: #e5c7ca1a; }
+  .landing-note { margin-top: var(--space-2); color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
 
   .dropzone {
     border: 1.5px dashed var(--border); border-radius: 14px; padding: 2.75rem 1.5rem;
@@ -362,8 +370,12 @@
   .share-story-spacer-bottom { flex: 1; }
   .share-story-bar { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: center; }
   @media (max-width: 600px) {
-    .landing { padding-inline: 0.75rem; }
-    .workflow-tabs button { padding-inline: 0.55rem; }
+    .landing { padding-inline: var(--space-2); }
+    .workflow-tabs { gap: 0.2rem; padding: 0.25rem; }
+    .workflow-tabs button { padding-inline: 0.35rem; font-size: 0.72rem; }
+    .landing-title { font-size: 1.55rem; }
+    .print-upload { grid-template-columns: 1.7rem minmax(0, 1fr); padding: var(--space-2); }
+    .print-upload .btn { grid-column: 1 / -1; width: 100%; }
   }
 </style>
 </head>
@@ -409,19 +421,16 @@
         <button type="button" data-workflow="image-tools">Image tools</button>
       </nav>
       <div id="printFlow">
-        <h1>Compress any file</h1>
-        <p>GZIP compresses any file losslessly. PNG, JPEG, and WebP images can also be re-encoded as JPEG or WebP, which is lossy. Target sizes are best-effort and the source is never changed.</p>
-        <label class="btn btn-primary btn-lg" for="compressFileInput" style="cursor:pointer;">Choose file</label>
-        <input type="file" id="compressFileInput" hidden>
-        <p class="utility-status utility-file-name" id="compressFileName">No file selected</p>
-          <path d="M405.586 61.7967H425.986C428.996 61.7967 431.894 61.5737 434.681 61.1278C437.468 60.6819 439.921 59.8458 442.039 58.6196C444.157 57.2819 445.829 55.4426 447.055 53.1016C448.393 50.7607 449.062 47.6951 449.062 43.905C449.062 40.1148 448.393 37.0493 447.055 34.7083C445.829 32.3673 444.157 30.5837 442.039 29.3575C439.921 28.0198 437.468 27.128 434.681 26.6821C431.894 26.2362 428.996 26.0133 425.986 26.0133H405.586V61.7967ZM379.334 5.61337H433.176C440.645 5.61337 446.999 6.72812 452.239 8.95762C457.478 11.0756 461.714 13.9182 464.947 17.4854C468.291 21.0526 470.688 25.1215 472.137 29.6919C473.697 34.2624 474.478 39.0001 474.478 43.905C474.478 48.6984 473.697 53.436 472.137 58.118C470.688 62.6885 468.291 66.7573 464.947 70.3245C461.714 73.8917 457.478 76.79 452.239 79.0195C446.999 81.1375 440.645 82.1965 433.176 82.1965H405.586V125.003H379.334V5.61337Z" fill="black"/>
-          <path d="M475.814 5.61337H502.066V51.4295H550.391V5.61337H576.643V125.003H550.391V73.5015H502.066V125.003H475.814V5.61337Z" fill="black"/>
-        </svg>
-      </div>
-      <p class="landing-tagline">Prepare images and PDFs for print, convert common image formats, compress to a target size, or use local image tools. Print-ready PDF input is rasterized and may be resampled; use Convert to keep a file byte-for-byte. Your files stay on this device.</p>
-      <label class="btn btn-primary btn-lg" for="fileInputLanding" style="cursor:pointer;">Convert Files</label>
-      <input type="file" id="fileInputLanding" accept="image/png,image/jpeg,image/webp,application/pdf" multiple hidden>
-      <p class="landing-note">PNG, JPEG, WebP, or PDF in (every PDF page becomes its own page) — press-ready PDF, TIFF, or PNG out. Processing happens entirely on this device.</p>
+        <p class="landing-kicker">PRESS WORKFLOW</p>
+        <h1 class="landing-title">Print-ready files</h1>
+        <p class="landing-tagline">Set page size, fit, padding, resolution, and color, then compile images or PDF pages into a press-ready export.</p>
+        <div class="print-upload">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+          <div class="print-upload-copy"><strong>Drop files to begin</strong><span>PNG, JPEG, WebP, or PDF · processed on this device</span></div>
+          <label class="btn btn-primary btn-lg" for="fileInputLanding" style="cursor:pointer;">Choose files</label>
+        </div>
+        <input type="file" id="fileInputLanding" accept="image/png,image/jpeg,image/webp,application/pdf" multiple hidden>
+        <p class="landing-note">Each PDF page becomes a separate page. Print-ready PDF input is rasterized and may be resampled.</p>
       </div>
       <section class="utility-panel" id="convertFlow" hidden>
         <h1>Convert a file</h1>
